@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    font-family: sans-serif;
+  }
+}
+
+
+/* Custom Print Stylesheet for A4 College Exam Paper Format */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  aside,
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .page-break {
+    page-break-after: always;
+  }
+}
+
+/* A4 Paper Container Styling for Screen Preview */
+.a4-paper-preview {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm 15mm;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  font-family: "Times New Roman", Times, serif;
+}
