@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { Question, QuestionOption } from '@/types';
+import { Question } from '@/types';
 import { INITIAL_QUESTIONS } from '@/lib/mock-data';
 import { MasterDataService } from './master-data.service';
 
@@ -16,11 +16,38 @@ export interface QuestionFilter {
   search_query?: string;
 }
 
+const QUESTIONS_CACHE_KEY = 'pmu_questions_cache';
+
 export class QuestionService {
+  private static getLocalQuestions(): Question[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const cached = localStorage.getItem(QUESTIONS_CACHE_KEY);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (e) {
+      console.warn('Failed to parse local questions cache:', e);
+    }
+    return [];
+  }
+
+  private static saveLocalQuestions(questions: Question[]): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(QUESTIONS_CACHE_KEY, JSON.stringify(questions));
+    } catch (e) {
+      console.warn('Failed to set local questions cache:', e);
+    }
+  }
+
   static async getQuestions(filters?: QuestionFilter): Promise<Question[]> {
+    let rawQuestions: Question[] = [];
+    let fetchedFromDb = false;
+
     try {
       const supabase = createClient();
-      let query = supabase
+      const { data, error } = await supabase
         .from('questions')
         .select(`
           *,
@@ -34,38 +61,30 @@ export class QuestionService {
         `)
         .order('created_at', { ascending: false });
 
-      if (filters?.department_id) query = query.eq('department_id', filters.department_id);
-      if (filters?.course_id) query = query.eq('course_id', filters.course_id);
-      if (filters?.module_id) query = query.eq('module_id', filters.module_id);
-      
-      if (filters?.course_outcome_ids && filters.course_outcome_ids.length > 0) {
-        query = query.in('course_outcome_id', filters.course_outcome_ids);
-      } else if (filters?.course_outcome_id) {
-        query = query.eq('course_outcome_id', filters.course_outcome_id);
-      }
-
-      if (filters?.k_level_ids && filters.k_level_ids.length > 0) {
-        query = query.in('k_level_id', filters.k_level_ids);
-      } else if (filters?.k_level_id) {
-        query = query.eq('k_level_id', filters.k_level_id);
-      }
-
-      if (filters?.question_type_id) query = query.eq('question_type_id', filters.question_type_id);
-      if (filters?.mark_value !== undefined) query = query.eq('mark_value', filters.mark_value);
-      if (filters?.search_query) {
-        query = query.ilike('question_text', `%${filters.search_query}%`);
-      }
-
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        return data as Question[];
+      if (!error && data) {
+        rawQuestions = data as Question[];
+        fetchedFromDb = true;
       }
     } catch (e) {
       console.warn('Supabase questions fetch error, using local fallback:', e);
     }
 
-    // Fallback filter
-    let questions = INITIAL_QUESTIONS;
+    const localQuestions = this.getLocalQuestions();
+
+    // Merge DB questions with local cache questions (deduped by ID)
+    const combinedMap = new Map<string, Question>();
+    
+    // Add initial mock questions if DB fetch wasn't performed or returned 0 records and local cache is empty
+    if (!fetchedFromDb && localQuestions.length === 0) {
+      INITIAL_QUESTIONS.forEach(q => combinedMap.set(q.id, q));
+    }
+
+    rawQuestions.forEach(q => combinedMap.set(q.id, q));
+    localQuestions.forEach(q => combinedMap.set(q.id, q));
+
+    let allQuestions = Array.from(combinedMap.values());
+
+    // Hydrate missing relation objects using MasterDataService
     const [depts, courses, modules, cos, klevels, types] = await Promise.all([
       MasterDataService.getDepartments(),
       MasterDataService.getCourses(),
@@ -75,19 +94,19 @@ export class QuestionService {
       MasterDataService.getQuestionTypes()
     ]);
 
-    questions = questions.map(q => ({
+    allQuestions = allQuestions.map(q => ({
       ...q,
-      department: depts.find(d => d.id === q.department_id),
-      course: courses.find(c => c.id === q.course_id),
-      module: modules.find(m => m.id === q.module_id),
-      course_outcome: cos.find(co => co.id === q.course_outcome_id),
-      k_level: klevels.find(k => k.id === q.k_level_id),
-      question_type: types.find(t => t.id === q.question_type_id)
+      department: q.department || depts.find(d => d.id === q.department_id),
+      course: q.course || courses.find(c => c.id === q.course_id),
+      module: q.module || modules.find(m => m.id === q.module_id),
+      course_outcome: q.course_outcome || cos.find(co => co.id === q.course_outcome_id),
+      k_level: q.k_level || klevels.find(k => k.id === q.k_level_id),
+      question_type: q.question_type || types.find(t => t.id === q.question_type_id)
     }));
 
-    if (!filters) return questions;
+    if (!filters) return allQuestions;
 
-    return questions.filter(q => {
+    return allQuestions.filter(q => {
       if (filters.department_id && q.department_id !== filters.department_id) return false;
       if (filters.course_id && q.course_id !== filters.course_id) return false;
       if (filters.module_id && q.module_id !== filters.module_id) return false;
@@ -105,7 +124,7 @@ export class QuestionService {
       }
 
       if (filters.question_type_id && q.question_type_id !== filters.question_type_id) return false;
-      if (filters.mark_value && Number(q.mark_value) !== Number(filters.mark_value)) return false;
+      if (filters.mark_value !== undefined && Number(q.mark_value) !== Number(filters.mark_value)) return false;
       if (filters.search_query) {
         const query = filters.search_query.toLowerCase();
         const matchesText = q.question_text.toLowerCase().includes(query);
@@ -160,6 +179,8 @@ export class QuestionService {
       updated_at: new Date().toISOString()
     };
 
+    let savedQuestion: Partial<Question> = { ...payload, options: questionData.options || [] };
+
     try {
       const { data, error } = await supabase
         .from('questions')
@@ -168,11 +189,9 @@ export class QuestionService {
         .single();
 
       if (!error && data) {
-        // Save MCQ options if present
+        savedQuestion = { ...data, options: questionData.options || [] };
         if (questionData.options && questionData.options.length > 0) {
-          // Delete existing options
           await supabase.from('question_options').delete().eq('question_id', qId);
-          // Insert new options
           const optionsPayload = questionData.options.map(opt => ({
             id: opt.id || crypto.randomUUID(),
             question_id: qId,
@@ -182,13 +201,54 @@ export class QuestionService {
           }));
           await supabase.from('question_options').insert(optionsPayload);
         }
-        return data as Question;
       }
     } catch (e) {
       console.error('Save question Supabase error:', e);
     }
 
-    return payload as unknown as Question;
+    // Hydrate relations
+    const [depts, courses, modules, cos, klevels, types] = await Promise.all([
+      MasterDataService.getDepartments(),
+      MasterDataService.getCourses(),
+      MasterDataService.getModules(),
+      MasterDataService.getCourseOutcomes(),
+      MasterDataService.getKLevels(),
+      MasterDataService.getQuestionTypes()
+    ]);
+
+    const fullQuestion: Question = {
+      ...savedQuestion,
+      id: qId,
+      department_id: questionData.department_id || '',
+      course_id: questionData.course_id || '',
+      module_id: questionData.module_id || '',
+      course_outcome_id: questionData.course_outcome_id || '',
+      k_level_id: questionData.k_level_id || '',
+      question_type_id: questionData.question_type_id || '',
+      mark_value: Number(questionData.mark_value) || 1,
+      question_text: questionData.question_text || '',
+      department: depts.find(d => d.id === questionData.department_id),
+      course: courses.find(c => c.id === questionData.course_id),
+      module: modules.find(m => m.id === questionData.module_id),
+      course_outcome: cos.find(co => co.id === questionData.course_outcome_id),
+      k_level: klevels.find(k => k.id === questionData.k_level_id),
+      question_type: types.find(t => t.id === questionData.question_type_id),
+      options: questionData.options || []
+    } as Question;
+
+    // Update local cache
+    const currentLocal = this.getLocalQuestions();
+    const index = currentLocal.findIndex(q => q.id === qId);
+    let updatedLocal: Question[];
+    if (index >= 0) {
+      updatedLocal = [...currentLocal];
+      updatedLocal[index] = fullQuestion;
+    } else {
+      updatedLocal = [fullQuestion, ...currentLocal];
+    }
+    this.saveLocalQuestions(updatedLocal);
+
+    return fullQuestion;
   }
 
   static async deleteQuestion(id: string): Promise<void> {
@@ -198,6 +258,10 @@ export class QuestionService {
     } catch (e) {
       console.error('Delete question error:', e);
     }
+
+    const currentLocal = this.getLocalQuestions();
+    const updatedLocal = currentLocal.filter(q => q.id !== id);
+    this.saveLocalQuestions(updatedLocal);
   }
 
   static async countAvailableQuestions(filter: {

@@ -12,9 +12,13 @@ export interface FacultyProfile {
   auth_user_id?: string;
   full_name: string;
   email: string;
+  password?: string;
   role: UserRole;
   department_id?: string;
   status: 'active' | 'inactive';
+  can_create_faculty?: boolean;
+  can_create_courses?: boolean;
+  can_create_questions?: boolean;
   department?: Department;
   created_at?: string;
 }
@@ -43,8 +47,12 @@ export interface Module {
 export interface CourseOutcome {
   id: string;
   course_id: string;
+  co_number?: number;
   code: string; // e.g. CO1
   description: string;
+  k_level_code?: string; // e.g. K1, K2
+  k_level_id?: string;
+  k_level?: KLevel;
   created_at?: string;
 }
 
@@ -148,6 +156,8 @@ export interface GeneratedPaperSection {
   section_order: number;
   instructions: string;
   total_section_marks: number;
+  num_questions?: number;
+  marks_per_question?: number;
   questions: GeneratedPaperQuestion[];
 }
 

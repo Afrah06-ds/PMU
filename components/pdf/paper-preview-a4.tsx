@@ -160,7 +160,7 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
                 {/* Section Title Header */}
                 <div className="text-center py-1">
                   <h4 className="text-xs font-bold uppercase tracking-wider">
-                    {sec.section_name} ({sec.num_questions} × {sec.marks_per_question} = {sec.num_questions * sec.marks_per_question} Marks)
+                    {sec.section_name} ({(sec.num_questions ?? sec.questions?.length ?? 0)} × {(sec.marks_per_question ?? sec.questions?.[0]?.marks ?? 0)} = {sec.total_section_marks || ((sec.num_questions ?? sec.questions?.length ?? 0) * (sec.marks_per_question ?? sec.questions?.[0]?.marks ?? 0))} Marks)
                   </h4>
                 </div>
 

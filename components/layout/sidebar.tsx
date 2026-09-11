@@ -38,7 +38,6 @@ export function Sidebar() {
     { name: 'Modules', href: '/modules', icon: Boxes },
     { name: 'Course Outcomes', href: '/course-outcomes', icon: Target },
     { name: 'K-Levels', href: '/k-levels', icon: GraduationCap },
-    { name: 'Exam Templates', href: '/exam-templates', icon: FileSpreadsheet },
   ];
 
   const adminNav = [
@@ -56,8 +55,8 @@ export function Sidebar() {
             P
           </div>
           <div>
-            <h1 className="font-bold text-white tracking-tight leading-none text-base">PMU ExamGen</h1>
-            <p className="text-[11px] text-slate-400 font-medium">Question Paper System</p>
+            <h1 className="font-bold text-white tracking-tight leading-none text-base font-poppins">PMIST EMS</h1>
+            <p className="text-[11px] text-indigo-300 font-medium mt-0.5">Exam Management System</p>
           </div>
         </div>
       </div>
@@ -108,64 +107,44 @@ export function Sidebar() {
           </nav>
         </div>
 
-        {/* Master Management */}
+        {/* Academic Setup & Management */}
         <div>
-          <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Academic Setup</p>
+          <p className="px-3 text-[11px] font-bold text-indigo-400 uppercase tracking-wider mb-2">Academic Setup</p>
           <nav className="space-y-1">
-            {academicNav.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-slate-800 text-white font-semibold border-l-2 border-brand-500'
-                      : 'hover:bg-slate-800 hover:text-white text-slate-400'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 text-slate-400" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+            <Link
+              href="/academic-setup"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                isActive('/academic-setup')
+                  ? 'bg-brand-600 text-white font-semibold shadow-sm shadow-brand-600/30'
+                  : 'hover:bg-slate-800 hover:text-white text-slate-300'
+              }`}
+            >
+              <Building2 className="w-4 h-4 text-indigo-400" />
+              <span>Academic Setup</span>
+            </Link>
+
+            <Link
+              href="/courses"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                isActive('/courses')
+                  ? 'bg-brand-600 text-white font-semibold shadow-sm shadow-brand-600/30'
+                  : 'hover:bg-slate-800 hover:text-white text-slate-300'
+              }`}
+            >
+              <BookOpen className="w-4 h-4 text-indigo-400" />
+              <span>Courses & Modules</span>
+            </Link>
+
           </nav>
         </div>
-
-        {/* Admin Management */}
-        {isAdmin && (
-          <div>
-            <p className="px-3 text-[11px] font-bold text-brand-400 uppercase tracking-wider mb-2">Admin Control</p>
-            <nav className="space-y-1">
-              {adminNav.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      active
-                        ? 'bg-slate-800 text-white font-semibold border-l-2 border-brand-500'
-                        : 'hover:bg-slate-800 hover:text-white text-slate-400'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 text-brand-400" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-        )}
       </div>
 
       {/* Logout */}
       <div className="p-3 border-t border-slate-800 bg-slate-950/30">
         <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+          type="button"
+          onClick={() => logout()}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>

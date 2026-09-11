@@ -138,16 +138,20 @@ export class MasterDataService {
       id: profile.id || crypto.randomUUID(),
       full_name: profile.full_name || 'New Faculty',
       email: profile.email || 'faculty@pmu.edu',
+      password: profile.password || 'password123',
       role: profile.role || 'faculty',
       department_id: profile.department_id,
-      status: profile.status || 'active'
+      status: profile.status || 'active',
+      can_create_faculty: profile.can_create_faculty ?? false,
+      can_create_courses: profile.can_create_courses ?? true,
+      can_create_questions: profile.can_create_questions ?? true
     };
 
     try {
       const { data, error } = await supabase
         .from('faculty_profiles')
         .upsert(payload)
-        .select()
+        .select('*, department:departments(*)')
         .single();
 
       if (error) console.error('Save faculty error:', error);
@@ -331,8 +335,11 @@ export class MasterDataService {
     const payload = {
       id: co.id || crypto.randomUUID(),
       course_id: co.course_id || INITIAL_COURSES[0].id,
-      code: co.code || 'CO1',
-      description: co.description || 'Course outcome description'
+      co_number: co.co_number || 1,
+      code: co.code || `CO${co.co_number || 1}`,
+      description: co.description || 'Course outcome description',
+      k_level_code: co.k_level_code || 'K1',
+      k_level_id: co.k_level_id
     };
 
     try {

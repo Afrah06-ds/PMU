@@ -27,6 +27,9 @@ export const INITIAL_FACULTY: FacultyProfile[] = [
     role: 'admin',
     department_id: '11111111-1111-1111-1111-111111111111',
     status: 'active',
+    can_create_faculty: true,
+    can_create_courses: true,
+    can_create_questions: true,
     department: INITIAL_DEPARTMENTS[0]
   },
   {
@@ -36,6 +39,9 @@ export const INITIAL_FACULTY: FacultyProfile[] = [
     role: 'faculty',
     department_id: '11111111-1111-1111-1111-111111111111',
     status: 'active',
+    can_create_faculty: false,
+    can_create_courses: true,
+    can_create_questions: true,
     department: INITIAL_DEPARTMENTS[0]
   }
 ];
@@ -79,11 +85,11 @@ export const INITIAL_MODULES: Module[] = [
 ];
 
 export const INITIAL_COS: CourseOutcome[] = [
-  { id: 'ca111111-1111-1111-1111-111111111111', course_id: 'c1111111-1111-1111-1111-111111111111', code: 'CO1', description: 'Understand physical layer concepts, framing, and link level error detection algorithms.' },
-  { id: 'ca222222-2222-2222-2222-222222222222', course_id: 'c1111111-1111-1111-1111-111111111111', code: 'CO2', description: 'Analyze packet switching strategies and distance-vector/link-state routing protocols.' },
-  { id: 'ca333333-3333-3333-3333-333333333333', course_id: 'c1111111-1111-1111-1111-111111111111', code: 'CO3', description: 'Apply subnet masking, IPv4/v6 addressing, and address resolution protocols.' },
-  { id: 'ca444444-4444-4444-4444-444444444444', course_id: 'c1111111-1111-1111-1111-111111111111', code: 'CO4', description: 'Evaluate transport layer flow control, sliding window mechanisms, and TCP congestion control.' },
-  { id: 'ca555555-5555-5555-5555-555555555555', course_id: 'c1111111-1111-1111-1111-111111111111', code: 'CO5', description: 'Design application layer architectures (DNS, HTTP) and implement network security fundamentals.' }
+  { id: 'ca111111-1111-1111-1111-111111111111', course_id: 'c1111111-1111-1111-1111-111111111111', co_number: 1, code: 'CO1', description: 'Understand physical layer concepts, framing, and link level error detection algorithms.', k_level_code: 'K2' },
+  { id: 'ca222222-2222-2222-2222-222222222222', course_id: 'c1111111-1111-1111-1111-111111111111', co_number: 2, code: 'CO2', description: 'Analyze packet switching strategies and distance-vector/link-state routing protocols.', k_level_code: 'K4' },
+  { id: 'ca333333-3333-3333-3333-333333333333', course_id: 'c1111111-1111-1111-1111-111111111111', co_number: 3, code: 'CO3', description: 'Apply subnet masking, IPv4/v6 addressing, and address resolution protocols.', k_level_code: 'K3' },
+  { id: 'ca444444-4444-4444-4444-444444444444', course_id: 'c1111111-1111-1111-1111-111111111111', co_number: 4, code: 'CO4', description: 'Evaluate transport layer flow control, sliding window mechanisms, and TCP congestion control.', k_level_code: 'K5' },
+  { id: 'ca555555-5555-5555-5555-555555555555', course_id: 'c1111111-1111-1111-1111-111111111111', co_number: 5, code: 'CO5', description: 'Design application layer architectures (DNS, HTTP) and implement network security fundamentals.', k_level_code: 'K6' }
 ];
 
 export const INITIAL_KLEVELS: KLevel[] = [

@@ -1,11 +1,25 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-poppins',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'Question Paper Generator System | PMU',
-  description: 'College Examination Management & Question Paper Generator System',
+  title: 'PMIST EMS - Examination Management System',
+  description: 'College Examination Management & Question Paper Generator System | Powered by Informatics',
 };
 
 export default function RootLayout({
@@ -14,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+      <body className="font-sans antialiased text-slate-900 bg-slate-50">
         <AuthProvider>
           {children}
         </AuthProvider>

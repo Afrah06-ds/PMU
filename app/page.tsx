@@ -2,16 +2,15 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 export default function RootPage() {
   const router = useRouter();
+
   useEffect(() => {
     router.replace('/dashboard');
   }, [router]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-      <p className="text-sm font-medium animate-pulse">Loading PMU Examination System...</p>
-    </div>
-  );
+  return <LoadingScreen message="Redirecting to dashboard..." />;
 }
+

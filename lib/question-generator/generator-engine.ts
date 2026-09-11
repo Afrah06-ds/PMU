@@ -34,7 +34,7 @@ export interface GenerationResult {
 export class QuestionGeneratorEngine {
   private static matchesQuestionType(q: Question, targetCode?: string): boolean {
     if (!targetCode) return true;
-    if (q.question_type?.code) return q.question_type.code === targetCode;
+    if (q.question_type?.code === targetCode) return true;
     const marks = Number(q.mark_value);
     if (targetCode === 'MCQ') return marks === 1;
     if (targetCode === 'SHORT') return marks === 2;

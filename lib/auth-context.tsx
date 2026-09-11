@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserRole, FacultyProfile } from '@/types';
 import { INITIAL_FACULTY, INITIAL_DEPARTMENTS } from '@/lib/mock-data';
 import { createClient } from '@/lib/supabase/client';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 interface AuthContextType {
   user: FacultyProfile | null;
@@ -82,15 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
               setUser(JSON.parse(savedUser));
             } catch {
-              setUser(INITIAL_FACULTY[0]);
+              setUser(null);
             }
           } else {
-            setUser(INITIAL_FACULTY[0]);
+            setUser(null);
           }
         }
       } catch (e) {
         console.error('Init auth error:', e);
-        setUser(INITIAL_FACULTY[0]);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -169,11 +170,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     localStorage.removeItem('pmu_auth_user');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   const role = user?.role || 'faculty';
   const isAdmin = role === 'admin';
   const isFaculty = role === 'faculty';
+
+  if (loading) {
+    return <LoadingScreen message="Initializing session..." />;
+  }
 
   return (
     <AuthContext.Provider value={{ user, role, isAdmin, isFaculty, login, logout }}>

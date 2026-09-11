@@ -113,7 +113,7 @@ export default function DashboardOverviewPage() {
 
       {/* Quick Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link href="/question-bank/add">
+        <Link href="/question-bank">
           <Card className="p-5 hover:border-brand-500 transition-all cursor-pointer group">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition-colors">

@@ -8,9 +8,25 @@ import { QuestionService } from '@/services/question.service';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, CheckCircle2, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle2, X } from 'lucide-react';
 
-export function QuestionForm({ editId }: { editId?: string }) {
+export interface QuestionFormProps {
+  editId?: string;
+  initialDepartmentId?: string;
+  initialCourseId?: string;
+  initialModuleId?: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export function QuestionForm({
+  editId,
+  initialDepartmentId,
+  initialCourseId,
+  initialModuleId,
+  onSuccess,
+  onCancel
+}: QuestionFormProps) {
   const router = useRouter();
 
   // Master lists
@@ -23,9 +39,9 @@ export function QuestionForm({ editId }: { editId?: string }) {
   const [marksList, setMarksList] = useState<Mark[]>([]);
 
   // Form states
-  const [departmentId, setDepartmentId] = useState('');
-  const [courseId, setCourseId] = useState('');
-  const [moduleId, setModuleId] = useState('');
+  const [departmentId, setDepartmentId] = useState(initialDepartmentId || '');
+  const [courseId, setCourseId] = useState(initialCourseId || '');
+  const [moduleId, setModuleId] = useState(initialModuleId || '');
   const [coId, setCoId] = useState('');
   const [klevelId, setKlevelId] = useState('');
   const [typeId, setTypeId] = useState('');
@@ -42,6 +58,7 @@ export function QuestionForm({ editId }: { editId?: string }) {
   ]);
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Load master data
   useEffect(() => {
@@ -56,7 +73,7 @@ export function QuestionForm({ editId }: { editId?: string }) {
       setTypes(tList);
       setMarksList(mList);
 
-      if (dList.length > 0) setDepartmentId(dList[0].id);
+      if (!departmentId && dList.length > 0) setDepartmentId(dList[0].id);
       if (kList.length > 0) setKlevelId(kList[0].id);
       if (tList.length > 0) setTypeId(tList[0].id);
       if (mList.length > 0) {
@@ -86,7 +103,7 @@ export function QuestionForm({ editId }: { editId?: string }) {
     });
   }, [editId]);
 
-  // Cascading courses when department changes
+  // Cascading courses when department changes (if dept selection enabled)
   useEffect(() => {
     if (departmentId) {
       MasterDataService.getCourses(departmentId).then(cList => {
@@ -98,13 +115,25 @@ export function QuestionForm({ editId }: { editId?: string }) {
     }
   }, [departmentId]);
 
+  // Auto-fetch department from course if course is provided
+  useEffect(() => {
+    if (courseId && (!departmentId || initialCourseId)) {
+      MasterDataService.getCourses().then(cList => {
+        const found = cList.find(c => c.id === courseId);
+        if (found && found.department_id) {
+          setDepartmentId(found.department_id);
+        }
+      });
+    }
+  }, [courseId, initialCourseId]);
+
   // Cascading modules & COs when course changes
   useEffect(() => {
     if (courseId) {
       MasterDataService.getModules(courseId).then(mList => {
         setModules(mList);
         if (mList.length > 0 && (!moduleId || !mList.some(m => m.id === moduleId))) {
-          setModuleId(mList[0].id);
+          setModuleId(initialModuleId && mList.some(m => m.id === initialModuleId) ? initialModuleId : mList[0].id);
         }
       });
 
@@ -155,35 +184,58 @@ export function QuestionForm({ editId }: { editId?: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
 
     if (isMCQ) {
       const hasEmpty = options.some(o => !o.option_text.trim());
       if (hasEmpty) {
         alert('Please fill out text for all 4 MCQ options (A, B, C, D).');
+        setSaving(false);
         return;
       }
     }
 
-    await QuestionService.saveQuestion({
-      id: editId,
-      department_id: departmentId,
-      course_id: courseId,
-      module_id: moduleId,
-      course_outcome_id: coId,
-      k_level_id: klevelId,
-      question_type_id: typeId,
-      marks_id: marksId,
-      mark_value: markValue,
-      question_text: questionText,
-      options: isMCQ ? options : []
-    });
+    try {
+      await QuestionService.saveQuestion({
+        id: editId,
+        department_id: departmentId,
+        course_id: courseId,
+        module_id: moduleId,
+        course_outcome_id: coId,
+        k_level_id: klevelId,
+        question_type_id: typeId,
+        marks_id: marksId,
+        mark_value: markValue,
+        question_text: questionText,
+        options: isMCQ ? options : []
+      });
 
-    router.push('/question-bank');
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push('/question-bank');
+      }
+    } catch (err) {
+      console.error('Error saving question:', err);
+      alert('Failed to save question. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelClick = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.back();
+    }
   };
 
   if (loading) {
     return <div className="p-12 text-center text-slate-400 font-medium">Loading form metadata...</div>;
   }
+
+  const hideCourseDeptSelectors = Boolean(initialCourseId);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
@@ -192,10 +244,10 @@ export function QuestionForm({ editId }: { editId?: string }) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={handleCancelClick}
             className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            {onCancel ? <X className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
           </button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
@@ -205,10 +257,17 @@ export function QuestionForm({ editId }: { editId?: string }) {
           </div>
         </div>
 
-        <Button type="submit" variant="primary">
-          <Save className="w-4 h-4" />
-          <span>Save Question</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={handleCancelClick}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" variant="primary" disabled={saving}>
+            <Save className="w-4 h-4" />
+            <span>{saving ? 'Saving...' : 'Save Question'}</span>
+          </Button>
+        </div>
       </div>
 
       {/* Metadata Configuration Card */}
@@ -218,37 +277,42 @@ export function QuestionForm({ editId }: { editId?: string }) {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Department */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Department *</label>
-            <select
-              required
-              value={departmentId}
-              onChange={e => setDepartmentId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            >
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>{d.code} - {d.name}</option>
-              ))}
-            </select>
-          </div>
+          {/* Department & Course (only if not auto-fetched by initialCourseId) */}
+          {!hideCourseDeptSelectors ? (
+            <>
+              {/* Department */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Department *</label>
+                <select
+                  required
+                  value={departmentId}
+                  onChange={e => setDepartmentId(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                >
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.code} - {d.name}</option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Course */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Course *</label>
-            <select
-              required
-              value={courseId}
-              onChange={e => setCourseId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            >
-              {courses.map(c => (
-                <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
-              ))}
-            </select>
-          </div>
+              {/* Course */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Course *</label>
+                <select
+                  required
+                  value={courseId}
+                  onChange={e => setCourseId(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                >
+                  {courses.map(c => (
+                    <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : null}
 
-          {/* Module */}
+          {/* Module / Unit Select */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Module / Unit *</label>
             <select
@@ -337,7 +401,7 @@ export function QuestionForm({ editId }: { editId?: string }) {
               <label className="block text-xs font-bold text-slate-700 uppercase">
                 MCQ Answer Options (Select Correct Answer)
               </label>
-              <Badge variant="success">MCQ 1-Mark Scheme</Badge>
+              <Badge variant="success">MCQ Option Selection</Badge>
             </div>
 
             <div className="grid grid-cols-1 gap-3">
