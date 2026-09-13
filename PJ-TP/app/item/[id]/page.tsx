@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { storage } from '@/lib/storage';
-import { LearningItemWithProgress, RevisionEvent, Note } from '@/types';
+import { LearningItemWithProgress, RevisionEvent, Note, LearningStatus } from '@/types';
 import { ConfidenceBadge, StatusBadge, DifficultyBadge, ItemTypeBadge } from '@/components/common/Badges';
 import { ArrowLeft, Calendar, History, FileText, Play, Clock, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -92,7 +92,19 @@ export default function ItemDetailPage() {
 
           <div className="flex items-center justify-between p-3 bg-accent/40 rounded-lg border border-border">
             <span className="text-xs text-muted-foreground">Current Status</span>
-            <StatusBadge status={item.progress.status} />
+            <select
+              value={item.progress.status}
+              onChange={(e) => {
+                const newSt = e.target.value as LearningStatus;
+                storage.bulkUpdateProgress([item.id], { status: newSt });
+              }}
+              className="bg-background border border-border rounded px-2.5 py-1 text-xs font-mono font-bold uppercase text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="new">NEW</option>
+              <option value="learned">LEARNED</option>
+              <option value="revised">REVISED</option>
+              <option value="mastered">MASTERED</option>
+            </select>
           </div>
 
           <div className="flex items-center justify-between p-3 bg-accent/40 rounded-lg border border-border">

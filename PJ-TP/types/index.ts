@@ -1,12 +1,7 @@
 export type ItemType =
-  | 'problem'
   | 'concept'
+  | 'problem'
   | 'technique'
-  | 'definition'
-  | 'api'
-  | 'protocol'
-  | 'command'
-  | 'architecture'
   | 'other';
 
 export type Difficulty = 'easy' | 'medium' | 'hard' | 'not_set';

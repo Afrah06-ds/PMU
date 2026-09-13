@@ -237,10 +237,7 @@ export default function TrackerPage() {
               <option value="concept">Concept</option>
               <option value="problem">Problem</option>
               <option value="technique">Technique</option>
-              <option value="definition">Definition</option>
-              <option value="api">API</option>
-              <option value="protocol">Protocol</option>
-              <option value="command">Command</option>
+              <option value="other">Other</option>
             </select>
 
             {/* Difficulty */}

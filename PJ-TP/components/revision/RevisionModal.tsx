@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { storage } from '@/lib/storage';
-import { LearningItemWithProgress, ConfidenceLevel, Note } from '@/types';
-import { ConfidenceBadge } from '../common/Badges';
+import { LearningItemWithProgress, ConfidenceLevel, LearningStatus, Note } from '@/types';
+import { ConfidenceBadge, StatusBadge } from '../common/Badges';
 import ReactMarkdown from 'react-markdown';
 
 interface RevisionModalProps {
@@ -27,6 +27,7 @@ const FAILURE_REASONS = [
 export function RevisionModal({ item, isOpen, onClose, onComplete }: RevisionModalProps) {
   const [revealNotes, setRevealNotes] = useState(false);
   const [selectedConfidence, setSelectedConfidence] = useState<ConfidenceLevel | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<LearningStatus>('revised');
   const [failureReason, setFailureReason] = useState<string>('');
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -36,6 +37,7 @@ export function RevisionModal({ item, isOpen, onClose, onComplete }: RevisionMod
     if (isOpen && item) {
       setRevealNotes(false);
       setSelectedConfidence(null);
+      setSelectedStatus(item.progress.status || 'revised');
       setFailureReason('');
       setStartTime(Date.now());
       setElapsedSeconds(0);
@@ -65,6 +67,7 @@ export function RevisionModal({ item, isOpen, onClose, onComplete }: RevisionMod
     storage.recordReview({
       item_id: item.id,
       new_confidence: level,
+      new_status: selectedStatus,
       result: isStruggled ? 'struggled' : 'success',
       failure_reason: failureReason || null,
       duration_seconds: elapsedSeconds || 60,
@@ -161,6 +164,32 @@ export function RevisionModal({ item, isOpen, onClose, onComplete }: RevisionMod
                 )}
               </div>
             )}
+          </div>
+
+          {/* Target Learning Status Selector */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-mono uppercase text-muted-foreground tracking-wider">
+                Set Item Learning Status
+              </h4>
+              <StatusBadge status={selectedStatus} />
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {(['new', 'learned', 'revised', 'mastered'] as LearningStatus[]).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setSelectedStatus(st)}
+                  className={`py-2 rounded-xl text-xs font-mono font-bold uppercase border transition-all ${
+                    selectedStatus === st
+                      ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                      : 'bg-background border-border text-muted-foreground hover:bg-accent hover:text-foreground'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Rating Options */}

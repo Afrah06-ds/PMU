@@ -794,6 +794,7 @@ class StorageEngine {
   public recordReview(data: {
     item_id: string;
     new_confidence: ConfidenceLevel;
+    new_status?: LearningStatus;
     result?: 'success' | 'struggled' | 'failed';
     failure_reason?: string | null;
     duration_seconds?: number;
@@ -805,10 +806,12 @@ class StorageEngine {
     const prevConfidence = progress.confidence;
     const prevStatus = progress.status;
 
-    // Derive new Status based on confidence progression (new, learned, revised, mastered)
-    let newStatus: LearningStatus = 'revised';
-    if (data.new_confidence === 'blue' || data.new_confidence === 'gold') newStatus = 'mastered';
-    else if (progress.status === 'new') newStatus = 'learned';
+    // Use explicit status if provided, otherwise derive from confidence
+    let newStatus: LearningStatus = data.new_status || 'revised';
+    if (!data.new_status) {
+      if (data.new_confidence === 'blue' || data.new_confidence === 'gold') newStatus = 'mastered';
+      else if (progress.status === 'new') newStatus = 'learned';
+    }
 
     const now = new Date();
     const newRevCount = progress.revision_count + 1;
