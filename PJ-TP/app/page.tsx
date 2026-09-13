@@ -160,11 +160,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Top Summary Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="bg-card border border-border p-4 rounded-xl">
-            <span className="text-xs font-mono uppercase text-muted-foreground">Total Items</span>
-            <div className="text-2xl font-bold text-foreground mt-1">{analytics.totalItems}</div>
-            <span className="text-[11px] text-muted-foreground">Across all syllabi</span>
+            <span className="text-xs font-mono uppercase text-muted-foreground">New</span>
+            <div className="text-2xl font-bold text-slate-400 mt-1">{analytics.newItems}</div>
+            <span className="text-[11px] text-muted-foreground">Not started</span>
           </div>
 
           <div className="bg-card border border-border p-4 rounded-xl">
@@ -174,21 +174,21 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-card border border-border p-4 rounded-xl">
-            <span className="text-xs font-mono uppercase text-muted-foreground">Revising</span>
-            <div className="text-2xl font-bold text-indigo-500 mt-1">{analytics.revisingItems}</div>
-            <span className="text-[11px] text-muted-foreground">Active cycle</span>
+            <span className="text-xs font-mono uppercase text-muted-foreground">Revised</span>
+            <div className="text-2xl font-bold text-indigo-500 mt-1">{analytics.revisedItems}</div>
+            <span className="text-[11px] text-muted-foreground">Active revisions</span>
           </div>
 
           <div className="bg-card border border-border p-4 rounded-xl">
-            <span className="text-xs font-mono uppercase text-muted-foreground">Confident</span>
-            <div className="text-2xl font-bold text-emerald-500 mt-1">{analytics.confidentItems}</div>
-            <span className="text-[11px] text-muted-foreground">Independent recall</span>
+            <span className="text-xs font-mono uppercase text-muted-foreground">Mastered</span>
+            <div className="text-2xl font-bold text-purple-500 mt-1">{analytics.masteredItems}</div>
+            <span className="text-[11px] text-muted-foreground">High confidence</span>
           </div>
 
           <div className="bg-card border border-border p-4 rounded-xl col-span-2 md:col-span-1">
-            <span className="text-xs font-mono uppercase text-muted-foreground">Mastered</span>
-            <div className="text-2xl font-bold text-amber-500 mt-1">{analytics.masteredItems}</div>
-            <span className="text-[11px] text-muted-foreground">Interview ready</span>
+            <span className="text-xs font-mono uppercase text-muted-foreground">Total Items</span>
+            <div className="text-2xl font-bold text-foreground mt-1">{analytics.totalItems}</div>
+            <span className="text-[11px] text-muted-foreground">Across all syllabi</span>
           </div>
         </div>
 

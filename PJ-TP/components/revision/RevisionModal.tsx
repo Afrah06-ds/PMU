@@ -115,15 +115,11 @@ export function RevisionModal({ item, isOpen, onClose, onComplete }: RevisionMod
             </div>
           </div>
 
-          {/* Description Prompt */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-mono uppercase text-muted-foreground tracking-wider">
-              Recall Prompt / Description
-            </h4>
-            <p className="text-sm leading-relaxed bg-background p-4 rounded-lg border border-border text-foreground">
-              {item.description || 'Recall or explain this concept from memory.'}
+          {item.description && (
+            <p className="text-xs text-muted-foreground bg-background p-3 rounded-lg border border-border">
+              {item.description}
             </p>
-          </div>
+          )}
 
           {/* Reveal Notes Section */}
           <div className="space-y-3">

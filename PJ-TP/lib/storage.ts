@@ -668,7 +668,13 @@ class StorageEngine {
   }
 
   public getProgressList(): ItemProgress[] {
-    return this.getItem(STORAGE_KEYS.PROGRESS, []);
+    const list = this.getItem<ItemProgress[]>(STORAGE_KEYS.PROGRESS, []);
+    return list.map((p) => {
+      let status = p.status;
+      if ((status as string) === 'revising') status = 'revised';
+      if ((status as string) === 'confident') status = 'mastered';
+      return { ...p, status };
+    });
   }
 
   public getJoinedItems(): LearningItemWithProgress[] {
@@ -799,10 +805,9 @@ class StorageEngine {
     const prevConfidence = progress.confidence;
     const prevStatus = progress.status;
 
-    // Derive new Status based on confidence progression
-    let newStatus: LearningStatus = 'revising';
-    if (data.new_confidence === 'green') newStatus = 'confident';
-    else if (data.new_confidence === 'blue' || data.new_confidence === 'gold') newStatus = 'mastered';
+    // Derive new Status based on confidence progression (new, learned, revised, mastered)
+    let newStatus: LearningStatus = 'revised';
+    if (data.new_confidence === 'blue' || data.new_confidence === 'gold') newStatus = 'mastered';
     else if (progress.status === 'new') newStatus = 'learned';
 
     const now = new Date();
@@ -995,10 +1000,9 @@ class StorageEngine {
     const syllabi = this.getSyllabi();
     const events = this.getRevisionEvents();
 
-    const totalItems = joined.length;
+    const newItems = joined.filter((i) => i.progress.status === 'new').length;
     const learnedItems = joined.filter((i) => i.progress.status === 'learned').length;
-    const revisingItems = joined.filter((i) => i.progress.status === 'revising').length;
-    const confidentItems = joined.filter((i) => i.progress.status === 'confident').length;
+    const revisedItems = joined.filter((i) => i.progress.status === 'revised').length;
     const masteredItems = joined.filter((i) => i.progress.status === 'mastered').length;
 
     const confidenceDistribution: Record<ConfidenceLevel, number> = {
@@ -1060,10 +1064,10 @@ class StorageEngine {
     const queue = this.getReviewQueue();
 
     return {
-      totalItems,
+      totalItems: joined.length,
+      newItems,
       learnedItems,
-      revisingItems,
-      confidentItems,
+      revisedItems,
       masteredItems,
       confidenceDistribution,
       syllabusProgress,

@@ -49,13 +49,12 @@ export function ConfidenceBadge({ level, showLabel = true }: { level: Confidence
 }
 
 export function StatusBadge({ status }: { status: LearningStatus }) {
-  const config = {
+  const config = ({
     new: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
     learned: 'bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20',
-    revising: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20',
-    confident: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+    revised: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20',
     mastered: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
-  }[status];
+  } as Record<string, string>)[status] || 'bg-slate-500/10 text-slate-600 border-slate-500/20';
 
   return (
     <span className={clsx('inline-block px-2 py-0.5 rounded text-[10px] uppercase font-mono font-semibold border', config)}>

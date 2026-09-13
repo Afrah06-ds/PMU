@@ -166,8 +166,7 @@ export default function TrackerPage() {
             <option value="all">Status: All</option>
             <option value="new">NEW</option>
             <option value="learned">LEARNED</option>
-            <option value="revising">REVISING</option>
-            <option value="confident">CONFIDENT</option>
+            <option value="revised">REVISED</option>
             <option value="mastered">MASTERED</option>
           </select>
 
@@ -240,6 +239,18 @@ export default function TrackerPage() {
               className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
             >
               Mark Learned
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange('revised')}
+              className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+            >
+              Mark Revised
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange('mastered')}
+              className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+            >
+              Mark Mastered
             </button>
             <button
               onClick={() => handleBulkConfidenceChange('green')}
