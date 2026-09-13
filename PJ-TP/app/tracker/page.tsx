@@ -17,6 +17,8 @@ import Link from 'next/link';
 import { RevisionModal } from '@/components/revision/RevisionModal';
 import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 
+import { TrackerMobileView } from '@/components/tracker/TrackerMobileView';
+
 export default function TrackerPage() {
   const [items, setItems] = useState<LearningItemWithProgress[]>([]);
   const [syllabi, setSyllabi] = useState<Syllabus[]>([]);
@@ -98,6 +100,10 @@ export default function TrackerPage() {
     setSelectedItemIds(new Set());
   };
 
+  const handleQuickStatusChange = (itemId: string, status: LearningStatus) => {
+    storage.bulkUpdateProgress([itemId], { status });
+  };
+
   const handleBulkConfidenceChange = (confidence: ConfidenceLevel) => {
     storage.bulkUpdateProgress(Array.from(selectedItemIds), { confidence });
     setSelectedItemIds(new Set());
@@ -116,247 +122,285 @@ export default function TrackerPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Learning State Tracker</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Global view across all curricula. Monitor confidence, status, and revision schedule ({items.length} total items).
-          </p>
-        </div>
-      </div>
+    <div>
+      {/* MOBILE OPTIMIZED TRACKER VIEW */}
+      <TrackerMobileView
+        items={items}
+        filteredItems={filteredItems}
+        syllabi={syllabi}
+        topics={topics}
+        search={search}
+        setSearch={setSearch}
+        selectedSyllabus={selectedSyllabus}
+        setSelectedSyllabus={setSelectedSyllabus}
+        selectedTopic={selectedTopic}
+        setSelectedTopic={setSelectedTopic}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+        selectedConfidence={selectedConfidence}
+        setSelectedConfidence={setSelectedConfidence}
+        selectedDifficulty={selectedDifficulty}
+        setSelectedDifficulty={setSelectedDifficulty}
+        selectedType={selectedType}
+        setSelectedType={setSelectedType}
+        selectedReviewStatus={selectedReviewStatus}
+        setSelectedReviewStatus={setSelectedReviewStatus}
+        selectedItemIds={selectedItemIds}
+        toggleSelectAll={toggleSelectAll}
+        toggleSelectItem={toggleSelectItem}
+        handleBulkStatusChange={handleBulkStatusChange}
+        handleBulkConfidenceChange={handleBulkConfidenceChange}
+        handleBulkDelete={handleBulkDelete}
+        onOpenReview={(item) => {
+          setReviewItem(item);
+          setReviewModalOpen(true);
+        }}
+        onQuickStatusChange={handleQuickStatusChange}
+      />
 
-      {/* Filter Bar */}
-      <div className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="Search items by title..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
+      {/* DESKTOP POWER TABLE VIEW */}
+      <div className="hidden md:block space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Learning State Tracker</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Global view across all curricula. Monitor confidence, status, and revision schedule ({items.length} total items).
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 pt-1">
-          {/* Syllabus */}
-          <select
-            value={selectedSyllabus}
-            onChange={(e) => setSelectedSyllabus(e.target.value)}
-            className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
-          >
-            <option value="all">Syllabus: All</option>
-            {syllabi.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.title}
-              </option>
-            ))}
-          </select>
+        {/* Filter Bar */}
+        <div className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search items by title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
 
-          {/* Status */}
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
-          >
-            <option value="all">Status: All</option>
-            <option value="new">NEW</option>
-            <option value="learned">LEARNED</option>
-            <option value="revised">REVISED</option>
-            <option value="mastered">MASTERED</option>
-          </select>
-
-          {/* Confidence */}
-          <select
-            value={selectedConfidence}
-            onChange={(e) => setSelectedConfidence(e.target.value)}
-            className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
-          >
-            <option value="all">Confidence: All</option>
-            <option value="orange">Orange 🟠</option>
-            <option value="yellow">Yellow 🟡</option>
-            <option value="green">Green 🟢</option>
-            <option value="blue">Blue 🔵</option>
-            <option value="gold">Gold ⭐</option>
-          </select>
-
-          {/* Type */}
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
-          >
-            <option value="all">Type: All</option>
-            <option value="concept">Concept</option>
-            <option value="problem">Problem</option>
-            <option value="technique">Technique</option>
-            <option value="definition">Definition</option>
-            <option value="api">API</option>
-            <option value="protocol">Protocol</option>
-            <option value="command">Command</option>
-          </select>
-
-          {/* Difficulty */}
-          <select
-            value={selectedDifficulty}
-            onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
-          >
-            <option value="all">Difficulty: All</option>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-            <option value="not_set">Not Set</option>
-          </select>
-
-          {/* Review Status */}
-          <select
-            value={selectedReviewStatus}
-            onChange={(e) => setSelectedReviewStatus(e.target.value)}
-            className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none col-span-2 sm:col-span-1"
-          >
-            <option value="all">Review: All</option>
-            <option value="overdue">Overdue</option>
-            <option value="due_today">Due Today</option>
-            <option value="no_review">No Review</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Bulk Action Bar (Visible when items selected) */}
-      {selectedItemIds.size > 0 && (
-        <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <span className="font-semibold text-foreground">
-            {selectedItemIds.size} items selected
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => handleBulkStatusChange('learned')}
-              className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 pt-1">
+            {/* Syllabus */}
+            <select
+              value={selectedSyllabus}
+              onChange={(e) => setSelectedSyllabus(e.target.value)}
+              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
             >
-              Mark Learned
-            </button>
-            <button
-              onClick={() => handleBulkStatusChange('revised')}
-              className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+              <option value="all">Syllabus: All</option>
+              {syllabi.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title}
+                </option>
+              ))}
+            </select>
+
+            {/* Status */}
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
             >
-              Mark Revised
-            </button>
-            <button
-              onClick={() => handleBulkStatusChange('mastered')}
-              className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+              <option value="all">Status: All</option>
+              <option value="new">NEW</option>
+              <option value="learned">LEARNED</option>
+              <option value="revised">REVISED</option>
+              <option value="mastered">MASTERED</option>
+            </select>
+
+            {/* Confidence */}
+            <select
+              value={selectedConfidence}
+              onChange={(e) => setSelectedConfidence(e.target.value)}
+              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
             >
-              Mark Mastered
-            </button>
-            <button
-              onClick={() => handleBulkConfidenceChange('green')}
-              className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+              <option value="all">Confidence: All</option>
+              <option value="orange">Orange 🟠</option>
+              <option value="yellow">Yellow 🟡</option>
+              <option value="green">Green 🟢</option>
+              <option value="blue">Blue 🔵</option>
+              <option value="gold">Gold ⭐</option>
+            </select>
+
+            {/* Type */}
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
             >
-              Set Green 🟢
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              className="px-2.5 py-1 rounded bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 font-medium"
+              <option value="all">Type: All</option>
+              <option value="concept">Concept</option>
+              <option value="problem">Problem</option>
+              <option value="technique">Technique</option>
+              <option value="definition">Definition</option>
+              <option value="api">API</option>
+              <option value="protocol">Protocol</option>
+              <option value="command">Command</option>
+            </select>
+
+            {/* Difficulty */}
+            <select
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none"
             >
-              Delete
-            </button>
+              <option value="all">Difficulty: All</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+              <option value="not_set">Not Set</option>
+            </select>
+
+            {/* Review Status */}
+            <select
+              value={selectedReviewStatus}
+              onChange={(e) => setSelectedReviewStatus(e.target.value)}
+              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none col-span-2 sm:col-span-1"
+            >
+              <option value="all">Review: All</option>
+              <option value="overdue">Overdue</option>
+              <option value="due_today">Due Today</option>
+              <option value="no_review">No Review</option>
+            </select>
           </div>
         </div>
-      )}
 
-      {/* Table List View */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-border bg-accent/40 text-muted-foreground font-mono uppercase">
-                <th className="p-3 w-10 text-center">
-                  <input
-                    type="checkbox"
-                    checked={
-                      filteredItems.length > 0 && selectedItemIds.size === filteredItems.length
-                    }
-                    onChange={toggleSelectAll}
-                    className="rounded border-border"
-                  />
-                </th>
-                <th className="p-3 font-semibold">Learning Item</th>
-                <th className="p-3 font-semibold">Syllabus & Topic</th>
-                <th className="p-3 font-semibold">Type</th>
-                <th className="p-3 font-semibold">Status</th>
-                <th className="p-3 font-semibold">Confidence</th>
-                <th className="p-3 font-semibold">Next Review</th>
-                <th className="p-3 font-semibold text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredItems.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground italic">
-                    No items matching filter criteria.
-                  </td>
+        {/* Bulk Action Bar (Visible when items selected) */}
+        {selectedItemIds.size > 0 && (
+          <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <span className="font-semibold text-foreground">
+              {selectedItemIds.size} items selected
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => handleBulkStatusChange('learned')}
+                className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+              >
+                Mark Learned
+              </button>
+              <button
+                onClick={() => handleBulkStatusChange('revised')}
+                className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+              >
+                Mark Revised
+              </button>
+              <button
+                onClick={() => handleBulkStatusChange('mastered')}
+                className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+              >
+                Mark Mastered
+              </button>
+              <button
+                onClick={() => handleBulkConfidenceChange('green')}
+                className="px-2.5 py-1 rounded bg-accent hover:bg-accent/80 font-medium"
+              >
+                Set Green 🟢
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="px-2.5 py-1 rounded bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Table List View */}
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-border bg-accent/40 text-muted-foreground font-mono uppercase">
+                  <th className="p-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredItems.length > 0 && selectedItemIds.size === filteredItems.length
+                      }
+                      onChange={toggleSelectAll}
+                      className="rounded border-border"
+                    />
+                  </th>
+                  <th className="p-3 font-semibold">Learning Item</th>
+                  <th className="p-3 font-semibold">Syllabus & Topic</th>
+                  <th className="p-3 font-semibold">Type</th>
+                  <th className="p-3 font-semibold">Status</th>
+                  <th className="p-3 font-semibold">Confidence</th>
+                  <th className="p-3 font-semibold">Next Review</th>
+                  <th className="p-3 font-semibold text-right">Action</th>
                 </tr>
-              ) : (
-                filteredItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-accent/30 transition-colors group"
-                  >
-                    <td className="p-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedItemIds.has(item.id)}
-                        onChange={() => toggleSelectItem(item.id)}
-                        className="rounded border-border"
-                      />
-                    </td>
-                    <td className="p-3">
-                      <Link
-                        href={`/item/${item.id}`}
-                        className="font-semibold text-foreground hover:text-primary transition-colors flex items-center gap-2"
-                      >
-                        {item.title}
-                        <DifficultyBadge difficulty={item.difficulty} />
-                      </Link>
-                    </td>
-                    <td className="p-3 text-muted-foreground">
-                      <div>{item.syllabus_title}</div>
-                      <div className="text-[10px]">{item.topic_title}</div>
-                    </td>
-                    <td className="p-3">
-                      <ItemTypeBadge type={item.item_type} />
-                    </td>
-                    <td className="p-3">
-                      <StatusBadge status={item.progress.status} />
-                    </td>
-                    <td className="p-3">
-                      <ConfidenceBadge level={item.progress.confidence} />
-                    </td>
-                    <td className="p-3 font-mono text-[11px] text-muted-foreground">
-                      {item.progress.next_review_at
-                        ? new Date(item.progress.next_review_at).toLocaleDateString()
-                        : '—'}
-                    </td>
-                    <td className="p-3 text-right">
-                      <button
-                        onClick={() => {
-                          setReviewItem(item);
-                          setReviewModalOpen(true);
-                        }}
-                        className="px-2.5 py-1 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-semibold transition-colors flex items-center gap-1 ml-auto"
-                      >
-                        <Play className="w-3 h-3" /> Review
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground italic">
+                      No items matching filter criteria.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredItems.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-accent/30 transition-colors group"
+                    >
+                      <td className="p-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedItemIds.has(item.id)}
+                          onChange={() => toggleSelectItem(item.id)}
+                          className="rounded border-border"
+                        />
+                      </td>
+                      <td className="p-3">
+                        <Link
+                          href={`/item/${item.id}`}
+                          className="font-semibold text-foreground hover:text-primary transition-colors flex items-center gap-2"
+                        >
+                          {item.title}
+                          <DifficultyBadge difficulty={item.difficulty} />
+                        </Link>
+                      </td>
+                      <td className="p-3 text-muted-foreground">
+                        <div>{item.syllabus_title}</div>
+                        <div className="text-[10px]">{item.topic_title}</div>
+                      </td>
+                      <td className="p-3">
+                        <ItemTypeBadge type={item.item_type} />
+                      </td>
+                      <td className="p-3">
+                        <StatusBadge status={item.progress.status} />
+                      </td>
+                      <td className="p-3">
+                        <ConfidenceBadge level={item.progress.confidence} />
+                      </td>
+                      <td className="p-3 font-mono text-[11px] text-muted-foreground">
+                        {item.progress.next_review_at
+                          ? new Date(item.progress.next_review_at).toLocaleDateString()
+                          : '—'}
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => {
+                            setReviewItem(item);
+                            setReviewModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-semibold transition-colors flex items-center gap-1 ml-auto"
+                        >
+                          <Play className="w-3 h-3" /> Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
