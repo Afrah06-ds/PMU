@@ -86,10 +86,19 @@ const DEFAULT_SAMPLE_MD = `# Backend Development
 - Search in Rotated Sorted Array
 - First and Last Position`;
 
+import { Loader2, Database } from 'lucide-react';
+
 export function MarkdownImportModal({ isOpen, onClose, onImportComplete }: MarkdownImportModalProps) {
   const [markdown, setMarkdown] = useState(DEFAULT_SAMPLE_MD);
   const [step, setStep] = useState<'edit' | 'preview'>('edit');
   const [parsed, setParsed] = useState<ParsedImportData | null>(null);
+
+  // Progress Loading State
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [currentCount, setCurrentCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [importStatusText, setImportStatusText] = useState('');
 
   if (!isOpen) return null;
 
@@ -152,42 +161,103 @@ export function MarkdownImportModal({ isOpen, onClose, onImportComplete }: Markd
     setStep('preview');
   };
 
-  const handleConfirmImport = () => {
-    if (!parsed) return;
+  const handleConfirmImport = async () => {
+    if (!parsed || isImporting) return;
+
+    setIsImporting(true);
+    setImportProgress(0);
+    setCurrentCount(0);
+    setImportStatusText('Initializing curriculum structures...');
+
+    // Collect all item entries into flat list for progress calculation
+    const allItemEntries: {
+      syllabusTitle: string;
+      topicTitle: string;
+      subtopicTitle?: string;
+      itemTitle: string;
+    }[] = [];
 
     parsed.syllabuses.forEach((s) => {
-      const newSyllabus = storage.addSyllabus(s.title);
       s.topics.forEach((t) => {
-        const newTopic = storage.addTopic(newSyllabus.id, t.title);
-
-        // Direct topic items
         t.items.forEach((itemTitle) => {
-          storage.addItem({
-            syllabus_id: newSyllabus.id,
-            topic_id: newTopic.id,
-            title: itemTitle,
-            item_type: 'concept',
-            difficulty: 'not_set',
+          allItemEntries.push({
+            syllabusTitle: s.title,
+            topicTitle: t.title,
+            itemTitle,
           });
         });
-
-        // Subtopic items
         t.subtopics.forEach((st) => {
-          const newSubtopic = storage.addSubtopic(newTopic.id, st.title);
           st.items.forEach((itemTitle) => {
-            storage.addItem({
-              syllabus_id: newSyllabus.id,
-              topic_id: newTopic.id,
-              subtopic_id: newSubtopic.id,
-              title: itemTitle,
-              item_type: 'concept',
-              difficulty: 'not_set',
+            allItemEntries.push({
+              syllabusTitle: s.title,
+              topicTitle: t.title,
+              subtopicTitle: st.title,
+              itemTitle,
             });
           });
         });
       });
     });
 
+    const total = allItemEntries.length || 1;
+    setTotalCount(total);
+
+    // Step 1: Create Syllabi, Topics, and Subtopics map
+    const syllabusMap = new Map<string, any>();
+    const topicMap = new Map<string, any>();
+    const subtopicMap = new Map<string, any>();
+
+    parsed.syllabuses.forEach((s) => {
+      const newSyllabus = storage.addSyllabus(s.title);
+      syllabusMap.set(s.title, newSyllabus);
+      s.topics.forEach((t) => {
+        const newTopic = storage.addTopic(newSyllabus.id, t.title);
+        topicMap.set(`${s.title}::${t.title}`, newTopic);
+        t.subtopics.forEach((st) => {
+          const newSubtopic = storage.addSubtopic(newTopic.id, st.title);
+          subtopicMap.set(`${s.title}::${t.title}::${st.title}`, newSubtopic);
+        });
+      });
+    });
+
+    // Step 2: Batch import items with micro-delays for live UI progress updates
+    const CHUNK_SIZE = 8;
+    for (let i = 0; i < allItemEntries.length; i += CHUNK_SIZE) {
+      const chunk = allItemEntries.slice(i, i + CHUNK_SIZE);
+      chunk.forEach((entry) => {
+        const syll = syllabusMap.get(entry.syllabusTitle);
+        const top = topicMap.get(`${entry.syllabusTitle}::${entry.topicTitle}`);
+        const sub = entry.subtopicTitle
+          ? subtopicMap.get(`${entry.syllabusTitle}::${entry.topicTitle}::${entry.subtopicTitle}`)
+          : null;
+
+        if (syll && top) {
+          storage.addItem({
+            syllabus_id: syll.id,
+            topic_id: top.id,
+            subtopic_id: sub?.id || null,
+            title: entry.itemTitle,
+            item_type: 'concept',
+            difficulty: 'not_set',
+          });
+        }
+      });
+
+      const processed = Math.min(i + chunk.length, total);
+      const percent = Math.round((processed / total) * 100);
+      setCurrentCount(processed);
+      setImportProgress(percent);
+      setImportStatusText(`Importing items: ${processed} of ${total} (${percent}%)`);
+
+      // Yield thread to update UI progress bar
+      await new Promise((res) => setTimeout(res, 15));
+    }
+
+    setImportProgress(100);
+    setImportStatusText(`Import Complete! ${total} items saved successfully.`);
+    await new Promise((res) => setTimeout(res, 400));
+
+    setIsImporting(false);
     onImportComplete?.();
     onClose();
   };
@@ -222,7 +292,37 @@ export function MarkdownImportModal({ isOpen, onClose, onImportComplete }: Markd
           </button>
         </div>
 
-        {step === 'edit' ? (
+        {isImporting ? (
+          <div className="p-8 space-y-6 text-center animation-fade-in my-auto">
+            <div className="flex flex-col items-center gap-3">
+              <div className="p-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 relative shadow-inner">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-lg font-bold text-foreground tracking-tight">Bulk Importing Curriculum...</h4>
+                <p className="text-xs font-mono text-muted-foreground">{importStatusText}</p>
+              </div>
+            </div>
+
+            {/* High-Tech Progress Bar Container */}
+            <div className="space-y-2 max-w-md mx-auto pt-2">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-muted-foreground uppercase font-semibold">Bulk Progress</span>
+                <span className="font-bold text-primary text-sm">{importProgress}%</span>
+              </div>
+              <div className="w-full bg-accent rounded-full h-3.5 overflow-hidden p-0.5 border border-border shadow-inner">
+                <div
+                  className="bg-gradient-to-r from-primary via-indigo-500 to-sky-400 h-full rounded-full transition-all duration-150 ease-out shadow-xs"
+                  style={{ width: `${importProgress}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pt-1">
+                <span>Items Processed:</span>
+                <span className="font-semibold text-foreground">{currentCount} / {totalCount}</span>
+              </div>
+            </div>
+          </div>
+        ) : step === 'edit' ? (
           <div className="p-6 overflow-y-auto space-y-4">
             <div className="bg-accent/40 rounded-lg p-3 border border-border text-xs text-muted-foreground space-y-1">
               <p className="font-mono font-semibold text-foreground">Deterministic Structure Format:</p>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, FileText, Upload, Sparkles, CheckCircle2, Link as LinkIcon } from 'lucide-react';
+import { X, FileText, Upload, Sparkles, CheckCircle2, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { LearningItemWithProgress } from '@/types';
 
@@ -22,6 +22,12 @@ export function NotesImportModal({ isOpen, onClose, onImportComplete }: NotesImp
   const [markdown, setMarkdown] = useState<string>('');
   const [parsedNotes, setParsedNotes] = useState<ParsedNote[]>([]);
   const [step, setStep] = useState<'edit' | 'preview'>('edit');
+
+  // Progress State
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [currentCount, setCurrentCount] = useState(0);
+  const [importStatusText, setImportStatusText] = useState('');
 
   if (!isOpen) return null;
 
@@ -152,19 +158,41 @@ export function NotesImportModal({ isOpen, onClose, onImportComplete }: NotesImp
     reader.readAsText(file);
   };
 
-  const handleImport = () => {
-    if (parsedNotes.length === 0) return;
+  const handleImport = async () => {
+    if (parsedNotes.length === 0 || isImporting) return;
 
-    parsedNotes.forEach((parsed) => {
-      const newNote = storage.addNote(parsed.title, parsed.markdown_content, parsed.category);
-      // Auto link matches if found
-      if (parsed.matchedItems && parsed.matchedItems.length > 0) {
-        parsed.matchedItems.forEach((item) => {
-          storage.linkNoteToItem(newNote.id, item.id);
-        });
-      }
-    });
+    setIsImporting(true);
+    setImportProgress(0);
+    setCurrentCount(0);
+    const total = parsedNotes.length;
+    setImportStatusText(`Saving notes: 0 of ${total} (0%)`);
 
+    const CHUNK_SIZE = 4;
+    for (let i = 0; i < total; i += CHUNK_SIZE) {
+      const chunk = parsedNotes.slice(i, i + CHUNK_SIZE);
+      chunk.forEach((parsed) => {
+        const newNote = storage.addNote(parsed.title, parsed.markdown_content, parsed.category);
+        if (parsed.matchedItems && parsed.matchedItems.length > 0) {
+          parsed.matchedItems.forEach((item) => {
+            storage.linkNoteToItem(newNote.id, item.id);
+          });
+        }
+      });
+
+      const processed = Math.min(i + chunk.length, total);
+      const percent = Math.round((processed / total) * 100);
+      setCurrentCount(processed);
+      setImportProgress(percent);
+      setImportStatusText(`Saving notes: ${processed} of ${total} (${percent}%)`);
+
+      await new Promise((res) => setTimeout(res, 20));
+    }
+
+    setImportProgress(100);
+    setImportStatusText(`Notes Import Complete! ${total} notes saved.`);
+    await new Promise((res) => setTimeout(res, 300));
+
+    setIsImporting(false);
     if (onImportComplete) onImportComplete();
     onClose();
   };
@@ -200,7 +228,37 @@ export function NotesImportModal({ isOpen, onClose, onImportComplete }: NotesImp
 
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
-          {step === 'edit' ? (
+          {isImporting ? (
+            <div className="p-8 space-y-6 text-center animation-fade-in my-auto">
+              <div className="flex flex-col items-center gap-3">
+                <div className="p-4 rounded-2xl bg-primary/10 text-primary border border-primary/20 relative shadow-inner">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-lg font-bold text-foreground tracking-tight">Importing Notes...</h4>
+                  <p className="text-xs font-mono text-muted-foreground">{importStatusText}</p>
+                </div>
+              </div>
+
+              {/* Progress Bar Container */}
+              <div className="space-y-2 max-w-md mx-auto pt-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-muted-foreground uppercase font-semibold">Import Progress</span>
+                  <span className="font-bold text-primary text-sm">{importProgress}%</span>
+                </div>
+                <div className="w-full bg-accent rounded-full h-3.5 overflow-hidden p-0.5 border border-border shadow-inner">
+                  <div
+                    className="bg-gradient-to-r from-primary via-indigo-500 to-sky-400 h-full rounded-full transition-all duration-150 ease-out shadow-xs"
+                    style={{ width: `${importProgress}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pt-1">
+                  <span>Notes Processed:</span>
+                  <span className="font-semibold text-foreground">{currentCount} / {parsedNotes.length}</span>
+                </div>
+              </div>
+            </div>
+          ) : step === 'edit' ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono">
