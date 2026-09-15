@@ -397,19 +397,26 @@ export function QuestionForm({
         {/* Dynamic MCQ Options Builder */}
         {isMCQ && (
           <div className="mt-6 pt-4 border-t border-slate-100 space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-slate-700 uppercase">
-                MCQ Answer Options (Select Correct Answer)
-              </label>
-              <Badge variant="success">MCQ Option Selection</Badge>
+            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  MCQ Answer Options (Select Correct Answer A, B, C, or D)
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  Click radio button or &quot;Set Correct&quot; on any option to mark it as the correct answer.
+                </p>
+              </div>
+              <Badge variant="success" className="text-xs">MCQ Mode</Badge>
             </div>
 
             <div className="grid grid-cols-1 gap-3">
               {options.map((opt, idx) => (
                 <div
                   key={opt.option_letter}
-                  className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
-                    opt.is_correct ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200'
+                  className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    opt.is_correct
+                      ? 'border-emerald-500 bg-emerald-50/60 shadow-xs ring-1 ring-emerald-500/20'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
                   <label className="flex items-center gap-2 cursor-pointer shrink-0">
@@ -418,9 +425,11 @@ export function QuestionForm({
                       name="correct_option"
                       checked={opt.is_correct}
                       onChange={() => handleSetCorrectOption(idx)}
-                      className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                     />
-                    <span className="w-6 h-6 rounded-md bg-slate-800 text-white font-bold text-xs flex items-center justify-center uppercase">
+                    <span className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center uppercase transition-colors ${
+                      opt.is_correct ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-white'
+                    }`}>
                       {opt.option_letter}
                     </span>
                   </label>
@@ -434,10 +443,18 @@ export function QuestionForm({
                     className="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
                   />
 
-                  {opt.is_correct && (
-                    <span className="text-xs font-bold text-emerald-700 flex items-center gap-1 shrink-0">
-                      <CheckCircle2 className="w-4 h-4" /> Correct Answer
+                  {opt.is_correct ? (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md flex items-center gap-1 shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Correct Answer
                     </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSetCorrectOption(idx)}
+                      className="text-[11px] font-semibold text-slate-500 hover:text-emerald-700 hover:bg-slate-100 px-2 py-1 rounded-md transition-colors shrink-0 cursor-pointer"
+                    >
+                      Set Correct
+                    </button>
                   )}
                 </div>
               ))}

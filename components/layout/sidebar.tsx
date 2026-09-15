@@ -27,7 +27,7 @@ export function Sidebar() {
 
   const mainNav = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Question Bank', href: '/question-bank', icon: FileQuestion },
+    { name: 'Questions', href: '/question-bank', icon: FileQuestion },
     { name: 'Generate Paper', href: '/generate-paper', icon: Wand2 },
     { name: 'Generated Papers', href: '/generated-papers', icon: FileText },
   ];
@@ -51,9 +51,7 @@ export function Sidebar() {
       {/* Brand Header */}
       <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800 bg-slate-950/50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center font-black text-white shadow-md shadow-brand-500/20 text-lg">
-            P
-          </div>
+          <img src="/logo.png" alt="PMU Logo" className="w-9 h-9 rounded-lg object-contain bg-white shadow-md shadow-brand-500/20" />
           <div>
             <h1 className="font-bold text-white tracking-tight leading-none text-base font-poppins">PMIST EMS</h1>
             <p className="text-[11px] text-indigo-300 font-medium mt-0.5">Exam Management System</p>

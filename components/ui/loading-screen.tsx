@@ -23,8 +23,8 @@ export function LoadingScreen({ message }: LoadingScreenProps) {
           <div className="absolute w-20 h-20 rounded-2xl bg-indigo-500/30 blur-md animate-pulse" />
           
           {/* Main Logo Badge */}
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-700 via-indigo-600 to-indigo-500 text-white flex items-center justify-center font-extrabold text-2xl shadow-xl shadow-indigo-600/40 border border-indigo-400/30">
-            P
+          <div className="relative w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-xl shadow-indigo-600/40 border border-indigo-400/30 overflow-hidden">
+            <img src="/logo.png" alt="PMU Logo" className="w-full h-full object-contain" />
           </div>
         </div>
 

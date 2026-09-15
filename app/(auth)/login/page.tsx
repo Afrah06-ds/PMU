@@ -52,10 +52,12 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center max-w-md w-full mx-auto z-10 py-6">
         
         {/* Branding Header */}
-        <div className="text-center space-y-3 mb-8 w-full">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 text-white font-extrabold text-2xl shadow-lg shadow-indigo-600/30 border border-indigo-500/20">
-            P
-          </div>
+        <div className="text-center space-y-3 mb-8 w-full flex flex-col items-center">
+          <img 
+            src="/logo.jpg" 
+            alt="PMU Logo" 
+            className="w-20 h-20 rounded-2xl object-contain bg-white shadow-lg shadow-indigo-600/30 border border-indigo-500/20" 
+          />
 
           <div className="space-y-1">
             {/* Line 1 */}

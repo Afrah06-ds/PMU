@@ -167,6 +167,9 @@ export interface GeneratedPaperSnapshot {
   course_code: string;
   course_name: string;
   exam_name: string;
+  exam_name_line1?: string;
+  exam_name_line2?: string;
+  target_branch_class?: string;
   semester: number;
   academic_year: string;
   date_of_exam: string;

@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Question, Department, Course, Module, CourseOutcome, KLevel, QuestionType, Mark } from '@/types';
+import Link from 'next/link';
+import { Question, Department, Course, Module, CourseOutcome, KLevel } from '@/types';
 import { QuestionService, QuestionFilter } from '@/services/question.service';
 import { MasterDataService } from '@/services/master-data.service';
 import { QuestionForm } from '@/components/question-bank/question-form';
-import { QuestionStats } from '@/components/question-bank/question-stats';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,36 +24,44 @@ import {
   SlidersHorizontal,
   ChevronRight,
   Sparkles,
-  ArrowLeft
+  FileUp,
+  GraduationCap,
+  Target,
+  Layers,
+  HelpCircle,
+  Filter,
+  Check
 } from 'lucide-react';
 
-export default function SingleQuestionModulePage() {
+export default function RefinedQuestionModulePage() {
   const [loading, setLoading] = useState(true);
 
-  // Master lists
+  // Master data state
   const [departments, setDepartments] = useState<Department[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [cos, setCos] = useState<CourseOutcome[]>([]);
   const [klevels, setKlevels] = useState<KLevel[]>([]);
 
-  // Selection states
+  // Filter selections
   const [selectedDeptId, setSelectedDeptId] = useState<string>('');
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedModuleId, setSelectedModuleId] = useState<string>('ALL'); // 'ALL' or specific module.id
+  const [selectedModuleId, setSelectedModuleId] = useState<string>('ALL');
   const [courseSearchQuery, setCourseSearchQuery] = useState<string>('');
 
-  // Questions state
+  // Questions state & filters
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [allCourseQuestions, setAllCourseQuestions] = useState<Question[]>([]);
   const [questionSearchQuery, setQuestionSearchQuery] = useState<string>('');
   const [selectedMarkFilter, setSelectedMarkFilter] = useState<number | ''>('');
+  const [selectedKLevelFilter, setSelectedKLevelFilter] = useState<string>('');
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | undefined>(undefined);
   const [viewQuestion, setViewQuestion] = useState<Question | null>(null);
 
-  // Load Initial Master Data
+  // Load initial master data
   useEffect(() => {
     Promise.all([
       MasterDataService.getDepartments(),
@@ -63,23 +71,23 @@ export default function SingleQuestionModulePage() {
       setDepartments(dList);
       setCourses(cList);
       setKlevels(kList);
-      
-      // Auto-select first course if available
+
       if (cList.length > 0) {
-        setSelectedCourseId(cList[0].id);
-        if (cList[0].department_id) {
-          setSelectedDeptId(cList[0].department_id);
+        // Default to first course (CS8392 or first available)
+        const defaultCourse = cList.find(c => c.code === 'CS8392') || cList[0];
+        setSelectedCourseId(defaultCourse.id);
+        if (defaultCourse.department_id) {
+          setSelectedDeptId(defaultCourse.department_id);
         }
       }
       setLoading(false);
     });
   }, []);
 
-  // Update available courses when department changes
+  // Sync courses when department changes
   useEffect(() => {
     MasterDataService.getCourses(selectedDeptId || undefined).then(cList => {
       setCourses(cList);
-      // If active course is not in new filtered list, select first available
       if (cList.length > 0 && (!selectedCourseId || !cList.some(c => c.id === selectedCourseId))) {
         setSelectedCourseId(cList[0].id);
       }
@@ -91,7 +99,7 @@ export default function SingleQuestionModulePage() {
     if (selectedCourseId) {
       MasterDataService.getModules(selectedCourseId).then(mList => {
         setModules(mList);
-        setSelectedModuleId('ALL'); // Reset to all modules when course changes
+        setSelectedModuleId('ALL');
       });
       MasterDataService.getCourseOutcomes(selectedCourseId).then(setCos);
     } else {
@@ -100,29 +108,41 @@ export default function SingleQuestionModulePage() {
     }
   }, [selectedCourseId]);
 
-  // Load questions for the selected course
+  // Fetch questions for active course & module
   const loadQuestions = async () => {
     if (!selectedCourseId) {
       setQuestions([]);
+      setAllCourseQuestions([]);
       return;
     }
     setLoading(true);
+
+    // Fetch all questions for course stats
+    const allData = await QuestionService.getQuestions({ course_id: selectedCourseId });
+    setAllCourseQuestions(allData);
+
+    // Filtered query
     const filter: QuestionFilter = {
       course_id: selectedCourseId,
       module_id: selectedModuleId !== 'ALL' ? selectedModuleId : undefined,
       mark_value: selectedMarkFilter !== '' ? Number(selectedMarkFilter) : undefined,
       search_query: questionSearchQuery || undefined
     };
-    const data = await QuestionService.getQuestions(filter);
+    let data = await QuestionService.getQuestions(filter);
+
+    if (selectedKLevelFilter) {
+      data = data.filter(q => q.k_level_id === selectedKLevelFilter || q.k_level?.code === selectedKLevelFilter);
+    }
+
     setQuestions(data);
     setLoading(false);
   };
 
   useEffect(() => {
     loadQuestions();
-  }, [selectedCourseId, selectedModuleId, selectedMarkFilter, questionSearchQuery]);
+  }, [selectedCourseId, selectedModuleId, selectedMarkFilter, selectedKLevelFilter, questionSearchQuery]);
 
-  // Selected Course Metadata
+  // Active Metadata
   const selectedCourse = useMemo(() => {
     return courses.find(c => c.id === selectedCourseId);
   }, [courses, selectedCourseId]);
@@ -132,7 +152,12 @@ export default function SingleQuestionModulePage() {
     return departments.find(d => d.id === (selectedCourse?.department_id || selectedDeptId));
   }, [departments, selectedCourse, selectedDeptId]);
 
-  // Filtered Course Catalog for Selection Grid / Dropdown
+  const selectedModule = useMemo(() => {
+    if (selectedModuleId === 'ALL') return null;
+    return modules.find(m => m.id === selectedModuleId);
+  }, [modules, selectedModuleId]);
+
+  // Filtered Courses List
   const filteredCourses = useMemo(() => {
     return courses.filter(c => {
       if (selectedDeptId && c.department_id !== selectedDeptId) return false;
@@ -144,7 +169,13 @@ export default function SingleQuestionModulePage() {
     });
   }, [courses, selectedDeptId, courseSearchQuery]);
 
-  // Handlers
+  // Question Count per Module Helper
+  const getModuleQuestionCount = (moduleId: string) => {
+    if (moduleId === 'ALL') return allCourseQuestions.length;
+    return allCourseQuestions.filter(q => q.module_id === moduleId).length;
+  };
+
+  // Action Handlers
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this question?')) {
       await QuestionService.deleteQuestion(id);
@@ -175,334 +206,462 @@ export default function SingleQuestionModulePage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Title Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 font-poppins">
-            <FileQuestion className="w-7 h-7 text-brand-600" />
-            Question Module
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Select department & course to manage syllabus questions module-wise, create MCQ/Subjective questions, and edit options.
-          </p>
-        </div>
+      {/* 1. Minimal Compact Header Banner */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 via-brand-950 to-indigo-950 px-4 py-3.5 sm:px-5 sm:py-4 text-white shadow-md border border-slate-800/80">
+        {/* Ambient Radial Accent */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        {selectedCourseId && (
-          <Button variant="primary" size="lg" onClick={handleOpenAddForm} className="shadow-md shadow-brand-600/20">
-            <Plus className="w-5 h-5" />
-            <span>Add Question</span>
-          </Button>
-        )}
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5 max-w-xl">
+            <div className="flex items-center gap-2">
+              <Badge variant="primary" className="bg-brand-500/20 text-brand-300 border-brand-400/30 text-[10px] py-0 px-2 font-medium">
+                <Sparkles className="w-3 h-3 text-brand-400 mr-1" /> Syllabus Question Bank
+              </Badge>
+              <span className="text-[10px] text-slate-400 font-medium">• PMIST EMS</span>
+            </div>
+            <h1 className="text-base sm:text-lg font-bold tracking-tight font-poppins flex items-center gap-2 text-white">
+              <FileQuestion className="w-4 h-4 text-brand-400 shrink-0" />
+              <span>Question Module & Bank Management</span>
+            </h1>
+            <p className="text-[11px] text-slate-300 leading-tight font-sans">
+              Manage department syllabus questions module-wise mapped with COs & Bloom&apos;s Taxonomy.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/question-bank/import">
+              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-white/20 bg-white/10 hover:bg-white/20 text-white font-medium shadow-xs">
+                <FileUp className="w-3 h-3 mr-1" />
+                <span>Bulk Import</span>
+              </Button>
+            </Link>
+
+            {selectedCourseId && (
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={handleOpenAddForm}
+                className="h-7 px-3 text-xs bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold shadow-xs border border-brand-400/20"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                <span>Add Question</span>
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Course & Department Selection Bar */}
-      <Card className="p-5 space-y-4 border-brand-100 bg-slate-50/50">
-        <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
+      {/* 2. Department & Course Selector Grid */}
+      <Card className="p-6 space-y-5 border-slate-200 shadow-sm bg-white">
+        {/* Section Header */}
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2 font-bold text-slate-800 text-xs uppercase tracking-wider">
             <Building2 className="w-4 h-4 text-brand-600" />
-            Select Department & Available Courses
+            1. Select Department & Course Catalog
           </div>
-          {selectedCourse && (
-            <Badge variant="primary" className="font-mono text-xs">
-              Active Course: {selectedCourse.code}
+          {selectedDepartment && (
+            <Badge variant="primary" className="font-semibold text-xs">
+              {selectedDepartment.code} Department Selected
             </Badge>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Department Select */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-              Department
-            </label>
-            <select
-              value={selectedDeptId}
-              onChange={e => setSelectedDeptId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none"
+        {/* Department Pills / Tabs */}
+        <div>
+          <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+            Academic Department
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedDeptId('')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                !selectedDeptId
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+              }`}
             >
-              <option value="">All Departments</option>
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.code} - {d.name}
-                </option>
-              ))}
-            </select>
-          </div>
+              <Building2 className="w-3.5 h-3.5" />
+              <span>All Departments</span>
+            </button>
 
-          {/* Course Search Input */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-              Search Course List
-            </label>
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search course code or name..."
-                value={courseSearchQuery}
-                onChange={e => setCourseSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Course Dropdown Selector */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-              Select Available Course
-            </label>
-            <select
-              value={selectedCourseId}
-              onChange={e => setSelectedCourseId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white font-semibold text-brand-700 focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            >
-              {filteredCourses.length === 0 ? (
-                <option value="">No courses match filters</option>
-              ) : (
-                filteredCourses.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.code} - {c.name} (Sem {c.semester})
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
-        </div>
-
-        {/* Available Course Pills / Cards List */}
-        {filteredCourses.length > 0 && (
-          <div className="pt-2 border-t border-slate-200/60 flex items-center gap-2 overflow-x-auto scrollbar-thin py-1">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
-              Quick Pick:
-            </span>
-            {filteredCourses.map(c => {
-              const isSelected = c.id === selectedCourseId;
+            {departments.map(d => {
+              const isSelected = selectedDeptId === d.id;
               return (
                 <button
-                  key={c.id}
+                  key={d.id}
                   type="button"
-                  onClick={() => setSelectedCourseId(c.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                  onClick={() => setSelectedDeptId(d.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                     isSelected
-                      ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30'
-                      : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
-                  <BookOpen className="w-3.5 h-3.5" />
-                  <span>{c.code}</span>
-                  <span className="font-normal opacity-80 truncate max-w-[140px]">({c.name})</span>
+                  <span className="font-mono font-extrabold">{d.code}</span>
+                  <span className="font-normal text-[11px] opacity-90 hidden sm:inline">({d.name})</span>
                 </button>
               );
             })}
           </div>
-        )}
-      </Card>
+        </div>
 
-      {/* Main Selected Course Questions Repository Section */}
-      {selectedCourse ? (
-        <div className="space-y-6">
-          {/* Active Course Banner */}
-          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-lg shrink-0">
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-extrabold text-slate-900 tracking-tight">{selectedCourse.code}</span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-sm font-semibold text-slate-700">{selectedCourse.name}</span>
-                  {selectedDepartment && (
-                    <Badge variant="neutral" className="text-xs">
-                      {selectedDepartment.code}
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Semester {selectedCourse.semester} • Academic Year {selectedCourse.academic_year} • {modules.length} Syllabus Modules
-                </p>
-              </div>
-            </div>
+        {/* Course Search & Interactive Cards Grid */}
+        <div className="space-y-3 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+              Available Courses ({filteredCourses.length})
+            </label>
 
-            <div className="flex items-center gap-3">
-              <Button variant="primary" onClick={handleOpenAddForm}>
-                <Plus className="w-4 h-4" />
-                <span>Add Question in {selectedCourse.code}</span>
-              </Button>
+            <div className="relative max-w-sm w-full">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search course code or title..."
+                value={courseSearchQuery}
+                onChange={e => setCourseSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+              />
             </div>
           </div>
 
-          {/* Module-Wise Filter Tabs */}
-          <Card className="p-4 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
-                <Boxes className="w-4 h-4 text-brand-600" />
-                Module-Wise View
-              </div>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                Questions Available: {questions.length}
-              </span>
+          {/* Courses Quick Selector Cards Grid */}
+          {filteredCourses.length === 0 ? (
+            <div className="p-6 text-center text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              No courses match your department or search query filter.
             </div>
-
-            {/* Module Tabs Bar */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-2">
-              <button
-                type="button"
-                onClick={() => setSelectedModuleId('ALL')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  selectedModuleId === 'ALL'
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                All Modules ({modules.length})
-              </button>
-
-              {modules.map(mod => {
-                const isSelected = selectedModuleId === mod.id;
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {filteredCourses.map(c => {
+                const isSelected = c.id === selectedCourseId;
                 return (
-                  <button
-                    key={mod.id}
-                    type="button"
-                    onClick={() => setSelectedModuleId(mod.id)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
+                  <div
+                    key={c.id}
+                    onClick={() => setSelectedCourseId(c.id)}
+                    className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer flex items-start justify-between gap-3 ${
                       isSelected
-                        ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'border-brand-600 bg-brand-50/50 shadow-md ring-2 ring-brand-500/20'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
-                    <span>Module {mod.module_number}</span>
-                    <span className="text-[11px] font-normal opacity-80 max-w-[120px] truncate">
-                      ({mod.title})
-                    </span>
-                  </button>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-black text-slate-900 text-sm">{c.code}</span>
+                        <Badge variant="primary" className="text-[10px] py-0 px-1.5 font-sans">
+                          Sem {c.semester}
+                        </Badge>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-800 line-clamp-1">{c.name}</p>
+                      <p className="text-[11px] text-slate-500">
+                        {c.department?.code || 'CSE'} • AY {c.academic_year}
+                      </p>
+                    </div>
+
+                    {isSelected && (
+                      <div className="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
+          )}
+        </div>
+      </Card>
 
-            {/* Question Filter & Search Inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
-              <div className="relative sm:col-span-2">
+      {/* 3. Selected Course & Module View */}
+      {selectedCourse ? (
+        <div className="space-y-6">
+          {/* Active Course Overview Banner */}
+          <Card className="p-5 bg-gradient-to-r from-brand-900 via-indigo-900 to-slate-900 text-white border-none shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 flex items-center justify-center font-bold text-xl text-white shrink-0 shadow-inner">
+                  <BookOpen className="w-6 h-6 text-brand-300" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xl font-extrabold tracking-tight font-mono text-brand-300">{selectedCourse.code}</span>
+                    <span className="text-slate-400">•</span>
+                    <h2 className="text-lg font-bold text-white">{selectedCourse.name}</h2>
+                    {selectedDepartment && (
+                      <Badge variant="neutral" className="bg-white/10 text-white border-white/20 text-xs">
+                        {selectedDepartment.code}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Semester {selectedCourse.semester} • Academic Year {selectedCourse.academic_year} • {modules.length} Syllabus Modules Configured
+                  </p>
+                </div>
+              </div>
+
+              {/* Course Level Quick Metrics */}
+              <div className="flex items-center gap-2 shrink-0 bg-white/10 backdrop-blur-xs p-2 rounded-xl border border-white/10">
+                <div className="text-center px-3 border-r border-white/10">
+                  <span className="text-lg font-extrabold text-white block leading-none">{allCourseQuestions.length}</span>
+                  <span className="text-[10px] text-slate-300 font-semibold uppercase">Total Questions</span>
+                </div>
+                <div className="text-center px-3 border-r border-white/10">
+                  <span className="text-lg font-extrabold text-brand-300 block leading-none">{modules.length}</span>
+                  <span className="text-[10px] text-slate-300 font-semibold uppercase">Modules</span>
+                </div>
+                <div className="text-center px-3">
+                  <span className="text-lg font-extrabold text-indigo-300 block leading-none">{cos.length}</span>
+                  <span className="text-[10px] text-slate-300 font-semibold uppercase">Course Outcomes</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Module-Wise Filter & Content Section */}
+          <Card className="p-6 space-y-6 border-slate-200 shadow-sm bg-white">
+            {/* Header Title */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2 font-bold text-slate-800 text-xs uppercase tracking-wider">
+                <Boxes className="w-4 h-4 text-brand-600" />
+                2. Module-Wise Question Selector
+              </div>
+              <Badge variant="info" className="text-xs font-bold self-start sm:self-auto">
+                Questions Available: {questions.length}
+              </Badge>
+            </div>
+
+            {/* Interactive Module Tabs Bar */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+                Select Syllabus Module
+              </label>
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedModuleId('ALL')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-2 ${
+                    selectedModuleId === 'ALL'
+                      ? 'bg-slate-900 text-white shadow-md'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                  }`}
+                >
+                  <Layers className="w-4 h-4" />
+                  <span>All Modules ({allCourseQuestions.length})</span>
+                </button>
+
+                {modules.map(mod => {
+                  const isSelected = selectedModuleId === mod.id;
+                  const count = getModuleQuestionCount(mod.id);
+                  return (
+                    <button
+                      key={mod.id}
+                      type="button"
+                      onClick={() => setSelectedModuleId(mod.id)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
+                        isSelected
+                          ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
+                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    >
+                      <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-[11px]">
+                        Mod {mod.module_number}
+                      </span>
+                      <span className="truncate max-w-[130px] font-semibold">{mod.title}</span>
+                      <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                        isSelected ? 'bg-white text-brand-700' : 'bg-slate-200 text-slate-700'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Active Module Details Card */}
+            {selectedModule ? (
+              <div className="p-4 rounded-xl bg-slate-50 border border-brand-200/80 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="primary" className="font-mono text-xs">
+                      Module {selectedModule.module_number}
+                    </Badge>
+                    <h3 className="font-bold text-slate-900 text-sm">{selectedModule.title}</h3>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenAddForm}
+                    className="bg-white text-brand-700 border-brand-300 hover:bg-brand-50 text-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    <span>Add Question to Module {selectedModule.module_number}</span>
+                  </Button>
+                </div>
+                {selectedModule.description && (
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    <span className="font-semibold text-slate-700">Syllabus Coverage: </span>
+                    {selectedModule.description}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-center justify-between">
+                <span>Viewing questions across <strong>All 5 Syllabus Modules</strong></span>
+                <span className="font-semibold text-brand-600">{allCourseQuestions.length} Total Questions</span>
+              </div>
+            )}
+
+            {/* Question Filter Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100">
+              {/* Question Text Search */}
+              <div className="relative sm:col-span-1">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search questions by statement..."
+                  placeholder="Search by question text..."
                   value={questionSearchQuery}
                   onChange={e => setQuestionSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
                 />
               </div>
 
+              {/* Mark Filter */}
               <div>
                 <select
                   value={selectedMarkFilter}
                   onChange={e => setSelectedMarkFilter(e.target.value !== '' ? Number(e.target.value) : '')}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-slate-50 font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none"
                 >
                   <option value="">All Marks Weightage</option>
                   <option value="1">1 Mark (MCQ)</option>
-                  <option value="2">2 Marks (Short)</option>
+                  <option value="2">2 Marks (Short Answer)</option>
                   <option value="5">5 Marks</option>
                   <option value="10">10 Marks</option>
-                  <option value="16">16 Marks</option>
+                  <option value="15">15 Marks (Long Answer)</option>
+                  <option value="20">20 Marks (Comprehensive)</option>
+                </select>
+              </div>
+
+              {/* K-Level Filter */}
+              <div>
+                <select
+                  value={selectedKLevelFilter}
+                  onChange={e => setSelectedKLevelFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                >
+                  <option value="">All K-Levels (Bloom Taxonomy)</option>
+                  {klevels.map(k => (
+                    <option key={k.id} value={k.code}>
+                      {k.code} - {k.name} {k.description ? `(${k.description.slice(0, 30)}...)` : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
-          </Card>
 
-          {/* Question Cards List */}
-          <div className="space-y-3">
-            {loading ? (
-              <div className="p-12 text-center text-slate-400 font-medium animate-pulse">
-                Loading questions...
-              </div>
-            ) : questions.length === 0 ? (
-              <Card className="p-12 text-center space-y-3">
-                <FileQuestion className="w-12 h-12 text-slate-300 mx-auto" />
-                <h3 className="text-base font-bold text-slate-800">No questions found for this selection</h3>
-                <p className="text-xs text-slate-500">
-                  {selectedModuleId !== 'ALL'
-                    ? 'No questions added under this module yet.'
-                    : 'Start adding questions for this course.'}
-                </p>
-                <Button variant="primary" size="sm" onClick={handleOpenAddForm}>
-                  <Plus className="w-4 h-4" />
-                  <span>Add First Question</span>
-                </Button>
-              </Card>
-            ) : (
-              questions.map((q, idx) => (
-                <Card key={q.id} className="hover:border-slate-300 transition-all p-4">
-                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <Badge variant="primary" className="font-bold">
-                          {q.mark_value} Mark{q.mark_value > 1 ? 's' : ''}
-                        </Badge>
-                        <Badge variant="warning" className="font-mono">
-                          {q.course_outcome?.code || 'CO1'}
-                        </Badge>
-                        <Badge variant="info" className="font-mono">
-                          {q.k_level?.code || 'K1'}
-                        </Badge>
-                        <Badge variant="neutral">
-                          {q.question_type?.code || 'MCQ'}
-                        </Badge>
-                        {q.module && (
-                          <span className="text-slate-500 font-medium">
-                            Mod {q.module.module_number}: {q.module.title}
-                          </span>
-                        )}
+            {/* Questions List */}
+            <div className="space-y-3 pt-2">
+              {loading ? (
+                <div className="p-12 text-center text-slate-400 font-medium animate-pulse">
+                  Loading module questions...
+                </div>
+              ) : questions.length === 0 ? (
+                <div className="p-12 text-center space-y-3 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <FileQuestion className="w-12 h-12 text-slate-300 mx-auto" />
+                  <h3 className="text-base font-bold text-slate-800">No questions found</h3>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    {selectedModule
+                      ? `No questions added under Module ${selectedModule.module_number} yet.`
+                      : 'No questions match the applied filters.'}
+                  </p>
+                  <Button variant="primary" size="sm" onClick={handleOpenAddForm}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    <span>Add First Question</span>
+                  </Button>
+                </div>
+              ) : (
+                questions.map((q, idx) => (
+                  <div
+                    key={q.id}
+                    className="p-4 rounded-xl border border-slate-200 hover:border-brand-300 transition-all bg-white hover:shadow-xs space-y-3"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        {/* Badges Row */}
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <Badge variant="primary" className="font-bold">
+                            {q.mark_value} Mark{q.mark_value > 1 ? 's' : ''}
+                          </Badge>
+                          <Badge variant="warning" className="font-mono">
+                            {q.course_outcome?.code || 'CO1'}
+                          </Badge>
+                          <Badge variant="info" className="font-mono">
+                            {q.k_level?.code || 'K1'}
+                          </Badge>
+                          <Badge variant="neutral" className="uppercase font-semibold">
+                            {q.question_type?.code || (q.options?.length ? 'MCQ' : 'SUBJECTIVE')}
+                          </Badge>
+                          {q.module && (
+                            <span className="text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                              Mod {q.module.module_number}: {q.module.title}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Question Text */}
+                        <p className="text-sm font-semibold text-slate-900 leading-relaxed">
+                          <span className="text-slate-400 font-mono mr-2">{idx + 1}.</span>
+                          {q.question_text}
+                        </p>
                       </div>
 
-                      <p className="text-sm font-semibold text-slate-900 leading-relaxed">
-                        <span className="text-slate-400 font-mono mr-2">{idx + 1}.</span>
-                        {q.question_text}
-                      </p>
-                    </div>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
+                        {q.options && q.options.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setViewQuestion(q)}
+                            className="text-xs"
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1 text-slate-500" />
+                            <span>Options ({q.options.length})</span>
+                          </Button>
+                        )}
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
-                      {q.options && q.options.length > 0 && (
-                        <Button variant="outline" size="sm" onClick={() => setViewQuestion(q)}>
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Options ({q.options.length})</span>
-                        </Button>
-                      )}
+                        <button
+                          onClick={() => handleOpenEditForm(q.id)}
+                          className="p-2 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                          title="Edit Question"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
 
-                      <button
-                        onClick={() => handleOpenEditForm(q.id)}
-                        className="p-2 text-slate-500 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                        title="Edit Question"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(q.id)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                        title="Delete Question"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <button
+                          onClick={() => handleDelete(q.id)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete Question"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </Card>
-              ))
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          </Card>
         </div>
       ) : (
         <Card className="p-12 text-center space-y-3">
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
           <h3 className="text-base font-bold text-slate-800">No Course Selected</h3>
           <p className="text-xs text-slate-500">
-            Please select a department and available course from the selector bar above to view questions.
+            Please select a department and course above to view syllabus questions module-wise.
           </p>
         </Card>
       )}
 
-      {/* Add / Edit Question Modal */}
+      {/* 4. Add / Edit Question Modal */}
       {isFormOpen && selectedCourse && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
@@ -536,7 +695,7 @@ export default function SingleQuestionModulePage() {
         </div>
       )}
 
-      {/* MCQ Options Viewer Modal */}
+      {/* 5. MCQ Options Viewer Modal */}
       {viewQuestion && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">

@@ -116,26 +116,24 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
               </div>
             </div>
 
-            {/* PMU Crest Emblem Mockup */}
+            {/* PMU Crest Emblem */}
             <div className="flex items-center gap-2 text-right">
-              <div className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center font-bold text-[10px] leading-tight">
-                PERIYAR<br/>MANIAMMAI
-              </div>
+              <img src="/logo.png" alt="PMU Logo" className="w-12 h-12 object-contain" />
             </div>
           </div>
 
           {/* Exam Header Titles */}
           <div className="text-center space-y-1 mb-4">
             <h1 className="text-sm font-bold tracking-wide uppercase font-serif">
-              ARTS & SCIENCE DEGREE EXAMINATIONS, DECEMBER 2025
+              {paper.exam_name_line1 || paper.exam_name || 'ARTS & SCIENCE DEGREE EXAMINATIONS, APRIL / MAY 2026'}
             </h1>
             <h2 className="text-xs font-bold tracking-wide text-slate-800">
-              End Semester Examinations : III Semester
+              {paper.exam_name_line2 || 'End Semester Examinations : III Semester'}
             </h2>
             <h3 className="text-xs font-bold tracking-wide uppercase">
-              COMMON TO ALL
+              {paper.target_branch_class || 'COMMON TO ALL'}
             </h3>
-            <p className="text-[11px] font-semibold">Year of Admission: 2024</p>
+            <p className="text-[11px] font-semibold">Academic Year: {paper.academic_year}</p>
             <h3 className="text-xs font-extrabold tracking-wide uppercase pt-1">
               {paper.course_code} {paper.course_name.toUpperCase()}
             </h3>
@@ -235,11 +233,6 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* End of Examination Footer */}
-          <div className="text-center pt-8 mt-6">
-            <p className="text-[10px] font-bold tracking-widest uppercase text-slate-400">--- END OF QUESTION PAPER ---</p>
           </div>
         </div>
       </div>
