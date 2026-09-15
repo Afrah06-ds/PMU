@@ -1,6 +1,6 @@
-# PMU Examination Management System
+# PMIST QMS - PMIST Question Management System
 
-PMU is a full-stack examination management system for colleges and universities. It helps academic teams maintain a structured question bank, map questions to course outcomes and cognitive levels, generate balanced examination papers, and save print-ready paper snapshots.
+PMIST QMS is a full-stack question management system for colleges and universities. It helps academic teams maintain a structured question bank, map questions to course outcomes and cognitive levels, generate balanced examination papers, and save print-ready paper snapshots.
 
 The application is built with Next.js App Router, React, TypeScript, Tailwind CSS, and Supabase PostgreSQL.
 
@@ -73,7 +73,7 @@ Create `.env.local` in the project root:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-NEXT_PUBLIC_APP_NAME=PMU Examination Management System
+NEXT_PUBLIC_APP_NAME=PMIST QMS - PMIST Question Management System
 ```
 
 The service-role key is server-side sensitive configuration. Never expose it in browser code, commit it to Git, or publish it in a client-side environment variable.

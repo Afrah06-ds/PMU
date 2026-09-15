@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { GeneratedPaperSnapshot } from '@/types';
 import { Button } from '@/components/ui/button';
+import { LatexContent } from '@/components/ui/latex-content';
 import { Printer, Download, Save, RefreshCw } from 'lucide-react';
 
 interface PaperPreviewA4Props {
@@ -172,7 +173,7 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
                           <div className="flex items-start justify-between">
                             <div className="pr-4">
                               <span className="font-bold mr-1.5">{q.question_number}. (a)</span>
-                              <span>{q.question_text}</span>
+                              <LatexContent content={q.question_text} />
                             </div>
                             <span className="font-bold shrink-0">({q.marks})</span>
                           </div>
@@ -183,7 +184,7 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
                               {q.options.map(opt => (
                                 <div key={opt.option_letter}>
                                   <span className="font-bold mr-1">{opt.option_letter}.</span>
-                                  <span>{opt.option_text}</span>
+                                  <LatexContent content={opt.option_text} />
                                 </div>
                               ))}
                             </div>
@@ -197,7 +198,7 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
                           <div className="flex items-start justify-between">
                             <div className="pr-4 pl-4">
                               <span className="font-bold mr-1.5">(b)</span>
-                              <span>{q.alternative_question_text || q.question_text}</span>
+                              <LatexContent content={q.alternative_question_text || q.question_text} />
                             </div>
                             <span className="font-bold shrink-0">({q.marks})</span>
                           </div>
@@ -208,7 +209,7 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
                           <div className="flex items-start justify-between">
                             <div className="flex-1 pr-2">
                               <span className="font-bold mr-2 inline-block w-4">{q.question_number}</span>
-                              <span>{q.question_text}</span>
+                              <LatexContent content={q.question_text} />
                             </div>
                             {q.marks > 1 && (
                               <span className="font-bold shrink-0">({q.marks})</span>
@@ -221,7 +222,7 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
                               {q.options.map(opt => (
                                 <div key={opt.option_letter} className="truncate">
                                   <span className="font-bold mr-1">{opt.option_letter}.</span>
-                                  <span>{opt.option_text}</span>
+                                  <LatexContent content={opt.option_text} />
                                 </div>
                               ))}
                             </div>

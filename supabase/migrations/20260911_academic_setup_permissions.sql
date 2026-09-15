@@ -1,4 +1,4 @@
--- SQL Migration: PMIST EMS Academic Setup & Course Outcomes Extension
+-- SQL Migration: PMIST QMS Academic Setup & Course Outcomes Extension
 -- Date: 2026-09-11
 
 -- 1. Extend Faculty Profiles table with password & granular access flags

@@ -7,6 +7,7 @@ import { QuestionService } from '@/services/question.service';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { LatexContent } from '@/components/ui/latex-content';
 import {
   FileUp,
   Download,
@@ -143,7 +144,7 @@ export default function RefinedImportQuestionsPage() {
                 <Badge variant="primary" className="bg-brand-500/20 text-brand-300 border-brand-400/30 text-[10px] py-0 px-2 font-medium">
                   <Sparkles className="w-3 h-3 text-brand-400 mr-1" /> Bulk Question Importer
                 </Badge>
-                <span className="text-[10px] text-slate-400 font-medium">• PMIST EMS</span>
+                <span className="text-[10px] text-slate-400 font-medium">• PMIST QMS</span>
               </div>
               <h1 className="text-base sm:text-lg font-bold tracking-tight font-poppins text-white flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-brand-400" />
@@ -261,7 +262,7 @@ export default function RefinedImportQuestionsPage() {
                     <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                       <td className="p-3 font-mono text-slate-400 font-bold">{idx + 1}</td>
                       <td className="p-3 font-medium text-slate-900 max-w-md">
-                        <p className="line-clamp-2">{row.question_text || 'Untitled Question'}</p>
+                        <p className="line-clamp-2"><LatexContent content={row.question_text || 'Untitled Question'} /></p>
                       </td>
                       <td className="p-3">
                         <Badge variant="primary" className="text-[10px] font-bold">
@@ -282,10 +283,10 @@ export default function RefinedImportQuestionsPage() {
                         {isMCQ ? (
                           <div className="space-y-0.5 text-[11px]">
                             <p className={row.correct_option?.toLowerCase() === 'a' ? 'font-bold text-emerald-700' : ''}>
-                              a) {row.option_a || '—'}
+                              a) <LatexContent content={row.option_a || '—'} />
                             </p>
                             <p className={row.correct_option?.toLowerCase() === 'b' ? 'font-bold text-emerald-700' : ''}>
-                              b) {row.option_b || '—'}
+                              b) <LatexContent content={row.option_b || '—'} />
                             </p>
                           </div>
                         ) : (

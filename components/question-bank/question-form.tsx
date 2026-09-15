@@ -8,6 +8,9 @@ import { QuestionService } from '@/services/question.service';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DropdownSelect } from '@/components/ui/dropdown-select';
+import { Modal } from '@/components/ui/modal';
+import { LatexContent } from '@/components/ui/latex-content';
 import { ArrowLeft, Save, CheckCircle2, X } from 'lucide-react';
 
 export interface QuestionFormProps {
@@ -59,6 +62,7 @@ export function QuestionForm({
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
 
   // Load master data
   useEffect(() => {
@@ -189,7 +193,7 @@ export function QuestionForm({
     if (isMCQ) {
       const hasEmpty = options.some(o => !o.option_text.trim());
       if (hasEmpty) {
-        alert('Please fill out text for all 4 MCQ options (A, B, C, D).');
+        setFormError('Please fill out text for all four MCQ options before saving.');
         setSaving(false);
         return;
       }
@@ -217,7 +221,7 @@ export function QuestionForm({
       }
     } catch (err) {
       console.error('Error saving question:', err);
-      alert('Failed to save question. Please try again.');
+      setFormError('Failed to save the question. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -238,7 +242,8 @@ export function QuestionForm({
   const hideCourseDeptSelectors = Boolean(initialCourseId);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
+    <>
+      <form onSubmit={handleSubmit} className="mx-auto max-w-4xl space-y-6">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -281,96 +286,60 @@ export function QuestionForm({
           {!hideCourseDeptSelectors ? (
             <>
               {/* Department */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Department *</label>
-                <select
-                  required
-                  value={departmentId}
-                  onChange={e => setDepartmentId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                >
-                  {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.code} - {d.name}</option>
-                  ))}
-                </select>
-              </div>
+              <DropdownSelect
+                required
+                label="Department"
+                value={departmentId}
+                onChange={setDepartmentId}
+                options={departments.map((department) => ({ value: department.id, label: `${department.code} - ${department.name}` }))}
+              />
 
               {/* Course */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Course *</label>
-                <select
-                  required
-                  value={courseId}
-                  onChange={e => setCourseId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                >
-                  {courses.map(c => (
-                    <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
-                  ))}
-                </select>
-              </div>
+              <DropdownSelect
+                required
+                label="Course"
+                value={courseId}
+                onChange={setCourseId}
+                options={courses.map((course) => ({ value: course.id, label: `${course.code} - ${course.name}` }))}
+              />
             </>
           ) : null}
 
           {/* Module / Unit Select */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Module / Unit *</label>
-            <select
-              required
-              value={moduleId}
-              onChange={e => setModuleId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            >
-              {modules.map(m => (
-                <option key={m.id} value={m.id}>Module {m.module_number}: {m.title}</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            required
+            label="Module / Unit"
+            value={moduleId}
+            onChange={setModuleId}
+            options={modules.map((module) => ({ value: module.id, label: `Module ${module.module_number}: ${module.title}` }))}
+          />
 
           {/* Course Outcome (CO) */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Course Outcome (CO) *</label>
-            <select
-              required
-              value={coId}
-              onChange={e => setCoId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            >
-              {cos.map(co => (
-                <option key={co.id} value={co.id}>{co.code} - {co.description.slice(0, 30)}...</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            required
+            label="Course Outcome (CO)"
+            value={coId}
+            onChange={setCoId}
+            options={cos.map((co) => ({ value: co.id, label: `${co.code} - ${co.description.slice(0, 30)}...` }))}
+          />
 
           {/* K-Level */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">K-Level (Bloom's) *</label>
-            <select
-              required
-              value={klevelId}
-              onChange={e => setKlevelId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            >
-              {klevels.map(k => (
-                <option key={k.id} value={k.id}>{k.code} - {k.name}</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            required
+            label="K-Level (Bloom's)"
+            value={klevelId}
+            onChange={setKlevelId}
+            options={klevels.map((level) => ({ value: level.id, label: `${level.code} - ${level.name}` }))}
+          />
 
           {/* Marks */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase mb-1">Marks Weightage *</label>
-            <select
-              required
-              value={marksId}
-              onChange={e => handleMarkChange(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            >
-              {marksList.map(m => (
-                <option key={m.id} value={m.id}>{m.mark_value} Mark{m.mark_value > 1 ? 's' : ''}</option>
-              ))}
-            </select>
-          </div>
+          <DropdownSelect
+            required
+            label="Marks Weightage"
+            value={marksId}
+            onChange={handleMarkChange}
+            options={marksList.map((mark) => ({ value: mark.id, label: `${mark.mark_value} Mark${mark.mark_value > 1 ? 's' : ''}` }))}
+          />
         </div>
       </Card>
 
@@ -392,6 +361,15 @@ export function QuestionForm({
             onChange={e => setQuestionText(e.target.value)}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none leading-relaxed"
           />
+          <p className="mt-2 text-[11px] font-medium text-slate-400">
+            {'LaTeX is supported. Use $...$ for inline math, $$...$$ for display math, and commands such as \\textbf{...} or \\begin{align*}.'}
+          </p>
+          {questionText && (
+            <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 text-sm leading-6 text-slate-800">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-500">Preview</p>
+              <LatexContent content={questionText} displayBlock />
+            </div>
+          )}
         </div>
 
         {/* Dynamic MCQ Options Builder */}
@@ -462,6 +440,18 @@ export function QuestionForm({
           </div>
         )}
       </Card>
-    </form>
+      </form>
+
+      <Modal
+        open={Boolean(formError)}
+        onClose={() => setFormError('')}
+        title="Review the question details"
+        description={formError}
+      >
+        <div className="flex justify-end">
+          <Button type="button" onClick={() => setFormError('')}>Got it</Button>
+        </div>
+      </Modal>
+    </>
   );
 }

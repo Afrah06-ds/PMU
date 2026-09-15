@@ -61,3 +61,46 @@
   border: 1px solid #e2e8f0;
   font-family: "Times New Roman", Times, serif;
 }
+
+.pmu-error-page {
+  isolation: isolate;
+}
+
+.pmu-error-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.42;
+  background-image: linear-gradient(rgba(99, 102, 241, 0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.055) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 80%);
+  pointer-events: none;
+}
+
+.pmu-error-glow {
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 999px;
+  filter: blur(70px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.pmu-error-glow-one {
+  top: 12%;
+  left: -120px;
+  background: #818cf8;
+}
+
+.pmu-error-glow-two {
+  right: -150px;
+  bottom: 4%;
+  background: #67e8f9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pmu-error-page * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,153 +1,211 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import {
-  LayoutDashboard,
-  FileQuestion,
-  Wand2,
-  FileText,
-  Building2,
+  Archive,
+  ArrowRight,
   BookOpen,
-  Boxes,
-  Target,
-  GraduationCap,
-  FileSpreadsheet,
-  Users,
+  FileQuestion,
+  House,
+  LibraryBig,
+  LogOut,
   ShieldCheck,
-  LogOut
+  SlidersHorizontal,
+  WandSparkles,
+  X,
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+
+type NavItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+const workflowNav: NavItem[] = [
+  { name: 'Overview', href: '/dashboard', icon: House },
+  { name: 'Question Library', href: '/question-bank', icon: LibraryBig },
+  { name: 'Paper Studio', href: '/generate-paper', icon: WandSparkles },
+  { name: 'Paper Archive', href: '/generated-papers', icon: Archive },
+];
+
+const academicNav: NavItem[] = [
+  { name: 'Academic Setup', href: '/academic-setup', icon: SlidersHorizontal },
+  { name: 'Courses & Modules', href: '/courses', icon: BookOpen },
+];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, isAdmin, logout } = useAuth();
-
-  const mainNav = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Questions', href: '/question-bank', icon: FileQuestion },
-    { name: 'Generate Paper', href: '/generate-paper', icon: Wand2 },
-    { name: 'Generated Papers', href: '/generated-papers', icon: FileText },
-  ];
-
-  const academicNav = [
-    { name: 'Departments', href: '/departments', icon: Building2 },
-    { name: 'Courses', href: '/courses', icon: BookOpen },
-    { name: 'Modules', href: '/modules', icon: Boxes },
-    { name: 'Course Outcomes', href: '/course-outcomes', icon: Target },
-    { name: 'K-Levels', href: '/k-levels', icon: GraduationCap },
-  ];
-
-  const adminNav = [
-    { name: 'Faculty Management', href: '/faculty', icon: Users }
-  ];
+  const { user, logout } = useAuth();
+  const [isSignOutOpen, setIsSignOutOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const isActive = (path: string) => pathname === path || (path !== '/dashboard' && pathname?.startsWith(path));
+  const initials = user?.full_name
+    ?.split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('') || 'U';
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsSignOutOpen(false);
+    };
+
+    if (isSignOutOpen) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isSignOutOpen]);
+
+  const confirmSignOut = async () => {
+    setIsSigningOut(true);
+
+    if (typeof window !== 'undefined') {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('pmu_'))
+        .forEach((key) => localStorage.removeItem(key));
+      sessionStorage.clear();
+    }
+
+    await logout();
+  };
+
+  const renderNav = (items: NavItem[]) => (
+    <nav className="space-y-1">
+      {items.map((item) => {
+        const Icon = item.icon;
+        const active = isActive(item.href);
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-all ${
+              active
+                ? 'bg-indigo-50 text-indigo-700'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            {active && <span className="absolute bottom-2 left-0 top-2 w-0.5 rounded-full bg-indigo-600" />}
+            <Icon className={`h-[17px] w-[17px] transition-colors ${active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+            <span>{item.name}</span>
+            {item.name === 'Paper Studio' && (
+              <ArrowRight className={`ml-auto h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 ${active ? 'text-indigo-500' : 'text-slate-300'}`} />
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 min-h-screen border-r border-slate-800">
-      {/* Brand Header */}
-      <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800 bg-slate-950/50">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="PMU Logo" className="w-9 h-9 rounded-lg object-contain bg-white shadow-md shadow-brand-500/20" />
+    <>
+      <aside className="flex min-h-screen w-[280px] shrink-0 flex-col border-r border-slate-200/80 bg-white text-slate-700">
+        <div className="flex h-[76px] items-center border-b border-slate-100 px-6">
+          <Link href="/dashboard" className="flex items-center gap-3" aria-label="PMIST QMS dashboard">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm shadow-indigo-100">
+              <img src="/logo.png" alt="PMIST QMS" className="h-full w-full object-contain" />
+            </span>
+            <span>
+              <span className="block font-poppins text-[15px] font-bold leading-none tracking-tight text-slate-900">PMIST QMS</span>
+              <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400">Question management</span>
+            </span>
+          </Link>
+        </div>
+
+        <div className="border-b border-slate-100 px-5 py-4">
+          <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-[11px] font-bold text-white shadow-sm shadow-indigo-600/20">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-bold text-slate-800">{user?.full_name || 'Administrator'}</p>
+              <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400">{user?.email || 'admin@pmu.edu'}</p>
+            </div>
+            <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]" title="Active session" />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin">
           <div>
-            <h1 className="font-bold text-white tracking-tight leading-none text-base font-poppins">PMIST EMS</h1>
-            <p className="text-[11px] text-indigo-300 font-medium mt-0.5">Exam Management System</p>
+            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
+            {renderNav(workflowNav)}
           </div>
-        </div>
-      </div>
 
-      {/* Profile Bar */}
-      <div className="px-4 py-3 border-b border-slate-800 bg-slate-850/40">
-        <div className="flex items-center justify-between">
-          <div className="truncate pr-2">
-            <p className="text-xs font-semibold text-slate-200 truncate">{user?.full_name || 'Administrator'}</p>
-            <p className="text-[11px] text-slate-400 truncate">{user?.email || 'admin@pmu.edu'}</p>
+          <div className="mt-7">
+            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Academic structure</p>
+            {renderNav(academicNav)}
           </div>
-          <Badge variant={isAdmin ? 'primary' : 'info'} className="capitalize shrink-0">
-            {isAdmin ? (
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-brand-400" /> Admin
-              </span>
-            ) : (
-              'Faculty'
-            )}
-          </Badge>
-        </div>
-      </div>
 
-      {/* Nav Content */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 scrollbar-thin">
-        {/* Core Workflow */}
-        <div>
-          <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Core Workflow</p>
-          <nav className="space-y-1">
-            {mainNav.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-brand-600 text-white font-semibold shadow-sm shadow-brand-600/30'
-                      : 'hover:bg-slate-800 hover:text-white text-slate-300'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-slate-400'}`} />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
         </div>
 
-        {/* Academic Setup & Management */}
-        <div>
-          <p className="px-3 text-[11px] font-bold text-indigo-400 uppercase tracking-wider mb-2">Academic Setup</p>
-          <nav className="space-y-1">
-            <Link
-              href="/academic-setup"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                isActive('/academic-setup')
-                  ? 'bg-brand-600 text-white font-semibold shadow-sm shadow-brand-600/30'
-                  : 'hover:bg-slate-800 hover:text-white text-slate-300'
-              }`}
-            >
-              <Building2 className="w-4 h-4 text-indigo-400" />
-              <span>Academic Setup</span>
-            </Link>
-
-            <Link
-              href="/courses"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                isActive('/courses')
-                  ? 'bg-brand-600 text-white font-semibold shadow-sm shadow-brand-600/30'
-                  : 'hover:bg-slate-800 hover:text-white text-slate-300'
-              }`}
-            >
-              <BookOpen className="w-4 h-4 text-indigo-400" />
-              <span>Courses & Modules</span>
-            </Link>
-
-          </nav>
+        <div className="border-t border-slate-100 p-4">
+          <div className="mb-3 flex items-center gap-2 px-2 text-[10px] font-semibold text-slate-400">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            Secure institutional access
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsSignOutOpen(true)}
+            className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+          >
+            <LogOut className="h-[17px] w-[17px] text-slate-400 transition-colors group-hover:text-red-500" />
+            Sign out
+          </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/30">
-        <button
-          type="button"
-          onClick={() => logout()}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors cursor-pointer"
+      {isSignOutOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/25 p-6 backdrop-blur-[2px]"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsSignOutOpen(false);
+          }}
         >
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
-        </button>
-      </div>
-    </aside>
+          <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-900/15" role="dialog" aria-modal="true" aria-labelledby="sign-out-title">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                  <LogOut className="h-5 w-5" />
+                </div>
+                <h2 id="sign-out-title" className="font-poppins text-lg font-bold text-slate-900">Sign out of PMIST QMS?</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">Your local session data and temporary paper data will be cleared from this browser.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSignOutOpen(false)}
+                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close sign out dialog"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setIsSignOutOpen(false)}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              >
+                Stay signed in
+              </button>
+              <button
+                type="button"
+                onClick={confirmSignOut}
+                disabled={isSigningOut}
+                className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSigningOut ? 'Signing out...' : 'Clear & sign out'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

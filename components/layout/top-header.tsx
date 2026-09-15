@@ -29,7 +29,7 @@ export function TopHeader() {
     <header className="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-20 shadow-xs">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-indigo-600 font-bold font-poppins">PMIST EMS</span>
+        <span className="text-indigo-600 font-bold font-poppins">PMIST QMS</span>
         <span className="text-slate-300">/</span>
         {breadcrumbs.map((b, idx) => (
           <React.Fragment key={b.href}>

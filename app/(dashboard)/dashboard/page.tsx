@@ -9,6 +9,7 @@ import { Question, GeneratedPaper } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { LatexContent } from '@/components/ui/latex-content';
 import {
   Wand2,
   FileQuestion,
@@ -43,10 +44,10 @@ export default function DashboardOverviewPage() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <Badge variant="primary" className="bg-brand-500/20 text-brand-300 border-brand-400/30">
-              <Sparkles className="w-3 h-3 text-brand-400 mr-1" /> PMU Examination Management SaaS
+              <Sparkles className="w-3 h-3 text-brand-400 mr-1" /> PMIST QMS · Question Management SaaS
             </Badge>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Question Paper Generator System
+              PMIST Question Management System
             </h1>
             <p className="text-slate-300 text-xs md:text-sm leading-relaxed">
               Maintain structured question banks mapped with COs & K-levels, perform zero-duplicate randomization, and render print-ready A4 examination papers.
@@ -176,7 +177,7 @@ export default function DashboardOverviewPage() {
                     <Badge variant="warning" className="text-[10px] font-mono">{q.course_outcome?.code || 'CO1'}</Badge>
                     <Badge variant="info" className="text-[10px] font-mono">{q.k_level?.code || 'K1'}</Badge>
                   </div>
-                  <p className="font-medium text-slate-900 line-clamp-1">{q.question_text}</p>
+                  <p className="font-medium text-slate-900 line-clamp-1"><LatexContent content={q.question_text} /></p>
                 </div>
               </div>
             ))}

@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
+import 'katex/dist/katex.min.css';
 import { AuthProvider } from '@/lib/auth-context';
 
 const inter = Inter({
@@ -18,8 +19,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'PMIST EMS - Examination Management System',
-  description: 'College Examination Management & Question Paper Generator System | Powered by Informatics',
+  title: 'PMIST QMS - PMIST Question Management System',
+  description: 'PMIST Question Management System | Powered by Informatics',
 };
 
 export default function RootLayout({
