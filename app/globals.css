@@ -62,6 +62,13 @@
   font-family: "Times New Roman", Times, serif;
 }
 
+.paper-header-logo {
+  width: 42mm;
+  height: 16mm;
+  object-fit: contain;
+  object-position: right center;
+}
+
 .pmu-error-page {
   isolation: isolate;
 }

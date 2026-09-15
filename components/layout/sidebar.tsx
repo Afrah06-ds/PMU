@@ -38,17 +38,11 @@ const academicNav: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [isSignOutOpen, setIsSignOutOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const isActive = (path: string) => pathname === path || (path !== '/dashboard' && pathname?.startsWith(path));
-  const initials = user?.full_name
-    ?.split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('') || 'U';
-
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsSignOutOpen(false);
@@ -104,30 +98,16 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="flex min-h-screen w-[280px] shrink-0 flex-col border-r border-slate-200/80 bg-white text-slate-700">
-        <div className="flex h-[76px] items-center border-b border-slate-100 px-6">
-          <Link href="/dashboard" className="flex items-center gap-3" aria-label="PMIST QMS dashboard">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm shadow-indigo-100">
-              <img src="/logo.png" alt="PMIST QMS" className="h-full w-full object-contain" />
+      <aside className="flex min-h-screen w-[224px] shrink-0 flex-col border-r border-slate-200/80 bg-white text-slate-700">
+        <div className="border-b border-slate-100 px-6 py-5">
+          <Link href="/dashboard" className="flex flex-col items-start gap-2" aria-label="PMIST QMS dashboard">
+            <span className="flex h-12 w-full items-center justify-start overflow-hidden">
+              <img src="/logo.png" alt="PMIST QMS" className="h-full w-[160px] object-contain object-left" />
             </span>
-            <span>
-              <span className="block font-poppins text-[15px] font-bold leading-none tracking-tight text-slate-900">PMIST QMS</span>
-              <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400">Question management</span>
+            <span className="font-poppins text-lg font-bold leading-none tracking-tight text-slate-900">
+              PMIST <span className="text-indigo-600">QMS</span>
             </span>
           </Link>
-        </div>
-
-        <div className="border-b border-slate-100 px-5 py-4">
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-[11px] font-bold text-white shadow-sm shadow-indigo-600/20">
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-slate-800">{user?.full_name || 'Administrator'}</p>
-              <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400">{user?.email || 'admin@pmu.edu'}</p>
-            </div>
-            <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]" title="Active session" />
-          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin">

@@ -118,8 +118,8 @@ export function PaperPreviewA4({ paper, onSave, onRegenerate, isSaved = false }:
             </div>
 
             {/* PMU Crest Emblem */}
-            <div className="flex items-center gap-2 text-right">
-              <img src="/logo.png" alt="PMU Logo" className="w-12 h-12 object-contain" />
+            <div className="flex items-center justify-end text-right">
+              <img src="/logo.png" alt="PMIST QMS" className="paper-header-logo object-contain object-right" />
             </div>
           </div>
 
