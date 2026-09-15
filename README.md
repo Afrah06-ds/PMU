@@ -1,137 +1,168 @@
-# PMU Question Paper Generator System
+# PMU Examination Management System
 
-A modern, full-stack college examination management and randomized question paper generation system built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and **Supabase PostgreSQL**.
+PMU is a full-stack examination management system for colleges and universities. It helps academic teams maintain a structured question bank, map questions to course outcomes and cognitive levels, generate balanced examination papers, and save print-ready paper snapshots.
 
----
+The application is built with Next.js App Router, React, TypeScript, Tailwind CSS, and Supabase PostgreSQL.
 
-## Key Features
+## What It Does
 
-- 🔐 **Role-Based Authentication (Supabase Auth & RLS)**: Dedicated **Admin** and **Faculty** roles with Row Level Security (RLS) policies.
-- 🗄️ **Normalized PostgreSQL Database**: 15 related tables covering Departments, Faculty, Courses, Modules, COs, K-Levels, Question Types, Marks, Questions, Options, Templates, and Snapshot-backed Generated Papers.
-- 🎯 **Academic Criteria Workflow**:
-  `Department → Course → Section configuration → Number of Questions → Marks → Course Outcome → K-Level → Generate Paper`
-- 📊 **Real-Time Question Availability Indicator**: Displays live question bank counts before generation (e.g. `Required: 10 | Available: 18 | ✓ Ready`).
-- 🎲 **Zero-Duplicate Randomization Engine**: Fast PostgreSQL RPC function and Fisher-Yates randomization ensuring zero duplicate question IDs within any generated paper.
-- 🔀 **Internal Choice (OR Pattern) Support**: Automatically pairs alternative long answer questions (e.g. `16. a. Question ... (15) OR b. Question ... (15)`).
-- 📄 **Snapshot-Backed Paper Saving**: Saves complete JSON snapshots so future question bank edits do not alter past examination papers.
-- 🖨️ **A4 Print & PDF Rendering**: Pixel-perfect A4 college examination layout with institution headers, instructions, part sections, MCQ grids, browser native printing (`Ctrl+P`), and instant downloadable PDF.
-- 📈 **Question Bank Analytics**: Live breakdown by Marks (1m, 2m, 10m, 15m, 20m), Course Outcomes (CO1..CO5), K-Levels (K1..K6), and Syllabus Modules.
-- 📥 **Excel/CSV Bulk Importer**: Import question banks in bulk with template download support.
+- Provides separate Admin and Faculty workflows with Supabase Auth and database-level access policies.
+- Organizes academic data across departments, courses, semesters, modules, course outcomes, K-levels, marks, and question types.
+- Creates and manages MCQ, short-answer, and long-answer questions.
+- Filters questions by course, module, marks, course outcome, K-level, and question type.
+- Imports question banks from CSV or Excel files.
+- Shows question-bank analytics by marks, course outcomes, K-levels, and modules.
+- Builds examination papers from configurable sections and mark patterns.
+- Supports internal-choice sections using an `OR` question pair.
+- Randomizes questions without reusing a question ID within a generated paper.
+- Randomizes MCQ option order when a paper is generated.
+- Saves generated papers as JSON snapshots, so later question-bank edits do not change previously saved papers.
+- Renders papers in an A4 examination layout for browser printing and PDF download.
 
----
+## Typical Workflow
 
-## Credentials
+1. Sign in as an administrator or faculty member.
+2. Configure departments, courses, modules, course outcomes, K-levels, and question types.
+3. Add questions individually or import them in bulk.
+4. Open **Generate Paper** and choose the course and paper sections.
+5. Set the number of questions, marks, filters, and optional internal-choice behavior for each section.
+6. Check the availability summary before generating the paper.
+7. Review the A4 preview, save the paper, and print or download it as a PDF.
 
-### System Administrator Account:
-- **Email**: `admin@pmu.edu`
-- **Password**: `admin@123`
+## Application Areas
 
-### Faculty Account:
-- **Email**: `faculty@pmu.edu`
-- **Password**: `faculty@123`
+| Area | Purpose |
+| --- | --- |
+| Dashboard | View question, course, module, and generated-paper metrics plus recent activity. |
+| Question Bank | Search, filter, create, edit, and delete questions. |
+| Bulk Import | Upload CSV or Excel question-bank data using the provided template. |
+| Generate Paper | Configure sections, select constraints, randomize questions, and preview the paper. |
+| Generated Papers | Browse saved paper history and reopen saved snapshots. |
+| Academic Setup | Manage departments, courses, modules, course outcomes, and K-levels. |
+| Faculty | Manage faculty profiles and role-based access. |
+| Settings | Manage application-level settings exposed by the dashboard. |
 
----
+## Technology
 
-## Database Setup (Supabase PostgreSQL)
+- **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend and database:** Supabase Auth, Supabase SSR, PostgreSQL, Row Level Security
+- **UI:** Reusable local components and Lucide icons
+- **Charts:** Recharts
+- **Import and document output:** `xlsx`, `jspdf`, and `html2canvas`
+- **Validation:** Zod
 
-1. Create a new project on [Supabase Console](https://supabase.com).
-2. Go to **SQL Editor** in your Supabase dashboard and run the SQL migration files located in `supabase/` in the following order:
+## Requirements
 
-### Step 1: Initial Schema (`supabase/migrations/001_initial_schema.sql`)
-Creates normalized tables, foreign key relationships, constraints, and indexes.
+- Node.js 18.17 or newer
+- npm
+- A Supabase project for persistent authentication and data
 
-### Step 2: Row Level Security Policies (`supabase/migrations/002_rls_policies.sql`)
-Enables RLS policies and admin helper functions.
+## Run Locally
 
-### Step 3: Random Selection RPC Function (`supabase/migrations/003_random_questions_rpc.sql`)
-Installs `get_random_questions` PostgreSQL RPC function.
-
-### Step 4: Seed Data (`supabase/seed.sql`)
-Seeds Admin and Faculty accounts, Departments (CSE, ECE, MECH, EEE), Courses (CS8591, etc.), Modules, COs, K-Levels, Question Types, Marks, Templates, and 60+ pre-filled sample questions.
-
----
-
-## Environment Variables Configuration
-
-Create a `.env.local` file in the root directory:
-
-```env
-# Supabase Credentials
-NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-
-# App Configuration
-NEXT_PUBLIC_APP_NAME=PMU Examination System
-```
-
----
-
-## Installation & Running Locally
+### 1. Install dependencies
 
 ```bash
-# 1. Install dependencies
 npm install
+```
 
-# 2. Run local development server
+### 2. Configure environment variables
+
+Create `.env.local` in the project root:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_APP_NAME=PMU Examination Management System
+```
+
+The service-role key is server-side sensitive configuration. Never expose it in browser code, commit it to Git, or publish it in a client-side environment variable.
+
+### 3. Set up Supabase
+
+Run the SQL files in the Supabase SQL Editor in this order:
+
+1. `supabase/migrations/001_initial_schema.sql` creates the normalized academic, question-bank, template, and generated-paper tables.
+2. `supabase/migrations/002_rls_policies.sql` enables Row Level Security and access policies.
+3. `supabase/migrations/003_random_questions_rpc.sql` installs the random-question database function.
+4. `supabase/migrations/20260911_academic_setup_permissions.sql` adds the latest academic setup and permission fields.
+5. `supabase/seed.sql` inserts sample departments, courses, academic metadata, users, and questions.
+
+For a production deployment, review the seed data and replace sample accounts and content with institution-managed records.
+
+### 4. Start the development server
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
----
-
-## Production Build & Verification
+## Production Build
 
 ```bash
-# Build Next.js application for production
 npm run build
-
-# Start production server
 npm start
 ```
 
----
+The project also exposes the following package scripts:
 
-## Directory Architecture
+```bash
+npm run dev     # Start the development server
+npm run build   # Create a production build
+npm start       # Serve the production build
+npm run lint    # Run the configured Next.js lint command
+```
 
+## Repository Structure
+
+```text
+app/
+├── (auth)/login/              Authentication screen
+├── (dashboard)/               Protected dashboard routes
+│   ├── dashboard/             Overview and analytics
+│   ├── academic-setup/        Academic configuration
+│   ├── question-bank/         Question CRUD and bulk import
+│   ├── generate-paper/        Paper builder and preview
+│   ├── generated-papers/      Saved paper history
+│   ├── departments/           Department management
+│   ├── courses/               Course catalog
+│   ├── modules/               Syllabus modules
+│   ├── course-outcomes/       Course outcome management
+│   ├── k-levels/              Cognitive-level management
+│   ├── faculty/               Faculty and role management
+│   └── settings/              Application settings
+├── globals.css                Application and A4 print styles
+└── layout.tsx                 Root layout and authentication provider
+
+components/                    Shared UI, layout, question, and paper components
+lib/
+├── auth-context.tsx           Client authentication state
+├── question-generator/        Paper generation and randomization engine
+├── supabase/                  Browser and server Supabase clients
+└── mock-data.ts               Local fallback data
+services/                      Data-access services for questions, papers, analytics, and master data
+types/                          Shared TypeScript models
+supabase/
+├── migrations/                Database schema, RLS, RPC, and permission changes
+└── seed.sql                   Sample development data
 ```
-d:\PMU\
-├── app/
-│   ├── (auth)/
-│   │   └── login/             # Supabase Auth Login screen
-│   ├── (dashboard)/
-│   │   ├── dashboard/          # Analytics overview & quick workflows
-│   │   ├── question-bank/      # Search, multi-faceted filter drawer, CRUD, bulk import
-│   │   ├── generate-paper/     # Interactive paper pattern generator & A4 preview
-│   │   ├── generated-papers/   # Paper history dashboard
-│   │   ├── departments/        # Department management
-│   │   ├── courses/            # Degree course catalog
-│   │   ├── modules/            # Syllabus module units
-│   │   ├── course-outcomes/    # CO management
-│   │   ├── k-levels/           # Bloom's K-Levels taxonomy
-│   │   ├── exam-templates/     # Examination pattern blueprints
-│   │   └── faculty/            # User role administration
-│   ├── globals.css             # Tailwind & A4 print CSS
-│   └── layout.tsx
-├── components/
-│   ├── layout/                 # Sidebar, TopHeader navigation
-│   ├── ui/                     # Reusable Button, Card, Badge, Dialog
-│   ├── question-bank/          # QuestionStats, QuestionForm
-│   └── pdf/                    # PaperPreviewA4 print & PDF renderer
-├── lib/
-│   ├── supabase/               # Supabase SSR client helpers
-│   ├── question-generator/     # QuestionGeneratorEngine
-│   ├── auth-context.tsx        # Authentication provider
-│   └── mock-data.ts            # Fallback dataset
-├── services/
-│   ├── master-data.service.ts  # Academic metadata service
-│   ├── question.service.ts     # Question bank service
-│   ├── paper.service.ts        # Paper snapshot service
-│   └── analytics.service.ts    # Analytics service
-├── supabase/
-│   ├── migrations/             # 001_initial_schema, 002_rls_policies, 003_random_questions_rpc
-│   └── seed.sql                # Initial seed script
-└── types/
-    └── index.ts                # TypeScript data interfaces
-```
+
+## Data and Security Notes
+
+- Supabase Row Level Security is part of the persistence model; review the policies before deploying to an institution.
+- The included seed data is for development and demonstration. Change all sample credentials and remove unnecessary sample data before production use.
+- Keep `.env.local` out of source control. The repository should contain only public Supabase configuration placeholders.
+- Generated papers store a complete snapshot of the selected questions and layout in `snapshot_json`.
+- The question generator reports section availability before generation and tracks used question IDs across the entire paper.
+
+## Contributing
+
+1. Create a feature branch.
+2. Make a focused change consistent with the existing TypeScript and Next.js patterns.
+3. Run `npm run build` and the relevant checks locally.
+4. Open a pull request describing the user-facing behavior and database changes, if any.
+
+## License
+
+No open-source license has been declared yet. Treat this repository as source-available and obtain permission from the project owners before redistributing or using it commercially.
