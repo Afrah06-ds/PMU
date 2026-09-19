@@ -143,14 +143,19 @@ export default function CoursesPage() {
     loadInitialData();
   };
 
-  const handleDeleteCourse = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this course and all its nested modules/COs?')) return;
+  const handleDeleteCourse = async (courseOrId: Course | string) => {
+    const id = typeof courseOrId === 'string' ? courseOrId : courseOrId.id;
+    const label = typeof courseOrId === 'string' ? 'this course' : `"${courseOrId.code} - ${courseOrId.name}"`;
+    if (!confirm(`Are you sure you want to delete ${label} and all its nested modules/COs?`)) return;
+
     setCourses(prev => prev.filter(c => c.id !== id));
     if (activeCourse?.id === id) setActiveCourse(null);
+
     try {
       await MasterDataService.deleteCourse(id);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete course:', err);
+      alert(`Delete failed: ${err?.message || 'Database error'}`);
     }
     await loadInitialData();
   };

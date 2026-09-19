@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
 import { Question } from '@/types';
-import { INITIAL_QUESTIONS } from '@/lib/mock-data';
 import { MasterDataService } from './master-data.service';
 
 export interface QuestionFilter {
@@ -79,11 +78,6 @@ export class QuestionService {
 
     // Merge DB questions with local cache questions (deduped by ID)
     const combinedMap = new Map<string, Question>();
-    
-    // Add initial mock questions if DB fetch wasn't performed or returned 0 records and local cache is empty
-    if (!fetchedFromDb && localQuestions.length === 0) {
-      INITIAL_QUESTIONS.forEach(q => combinedMap.set(q.id, q));
-    }
 
     rawQuestions.forEach(q => combinedMap.set(q.id, q));
     localQuestions.forEach(q => combinedMap.set(q.id, q));

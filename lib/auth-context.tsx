@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserRole, FacultyProfile } from '@/types';
-import { INITIAL_FACULTY, INITIAL_DEPARTMENTS } from '@/lib/mock-data';
 import { createClient } from '@/lib/supabase/client';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 
@@ -50,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       full_name: isAdminUser ? 'System Administrator' : email.split('@')[0].toUpperCase(),
       email: email,
       role: isAdminUser ? 'admin' : 'faculty',
-      department_id: INITIAL_DEPARTMENTS[0].id,
+      department_id: '11111111-1111-1111-1111-111111111111',
       status: 'active'
     };
 
@@ -153,11 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     } catch (err: any) {
       console.error('Login error:', err);
-      const isAdminUser = trimmed.includes('admin');
-      const fallbackUser: FacultyProfile = isAdminUser ? INITIAL_FACULTY[0] : INITIAL_FACULTY[1];
-      setUser(fallbackUser);
-      localStorage.setItem('pmu_auth_user', JSON.stringify(fallbackUser));
-      return { success: true };
+      return { success: false, error: err?.message || 'Login failed' };
     }
   };
 

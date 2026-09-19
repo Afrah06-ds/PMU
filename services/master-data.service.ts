@@ -10,104 +10,70 @@ import {
   Mark,
   ExamTemplate
 } from '@/types';
-import {
-  INITIAL_DEPARTMENTS,
-  INITIAL_FACULTY,
-  INITIAL_COURSES,
-  INITIAL_MODULES,
-  INITIAL_COS,
-  INITIAL_KLEVELS,
-  INITIAL_QUESTION_TYPES,
-  INITIAL_MARKS,
-  INITIAL_EXAM_TEMPLATES
-} from '@/lib/mock-data';
+const DEFAULT_KLEVELS: KLevel[] = [
+  { id: 'e1111111-1111-1111-1111-111111111111', code: 'K1', name: 'Remember', description: 'Recall basic facts, terms, concepts and answers' },
+  { id: 'e2222222-2222-2222-2222-222222222222', code: 'K2', name: 'Understand', description: 'Demonstrate understanding of facts and ideas' },
+  { id: 'e3333333-3333-3333-3333-333333333333', code: 'K3', name: 'Apply', description: 'Solve problems in new situations by applying acquired knowledge' },
+  { id: 'e4444444-4444-4444-4444-444444444444', code: 'K4', name: 'Analyze', description: 'Examine and break information into parts' },
+  { id: 'e5555555-5555-5555-5555-555555555555', code: 'K5', name: 'Evaluate', description: 'Present and defend opinions by making judgments' },
+  { id: 'e6666666-6666-6666-6666-666666666666', code: 'K6', name: 'Create', description: 'Compile information together in a different way' }
+];
 
-const DEPTS_CACHE_KEY = 'pmu_depts_cache';
-const COURSES_CACHE_KEY = 'pmu_courses_cache';
-const MODULES_CACHE_KEY = 'pmu_modules_cache';
-const COS_CACHE_KEY = 'pmu_cos_cache';
-const KLEVELS_CACHE_KEY = 'pmu_klevels_cache';
-const TYPES_CACHE_KEY = 'pmu_types_cache';
-const MARKS_CACHE_KEY = 'pmu_marks_cache';
+const DEFAULT_QUESTION_TYPES: QuestionType[] = [
+  { id: 'd1111111-1111-1111-1111-111111111111', code: 'MCQ', name: 'Multiple Choice Question', default_marks: 1 },
+  { id: 'd2222222-2222-2222-2222-222222222222', code: 'SHORT', name: 'Short Answer Question', default_marks: 2 },
+  { id: 'd3333333-3333-3333-3333-333333333333', code: 'LONG', name: 'Long Answer Question', default_marks: 15 }
+];
 
-const DELETED_COURSES_KEY = 'pmu_deleted_courses_ids';
-const DELETED_MODULES_KEY = 'pmu_deleted_modules_ids';
-const DELETED_COS_KEY = 'pmu_deleted_cos_ids';
-const DELETED_DEPTS_KEY = 'pmu_deleted_depts_ids';
-const DELETED_FACULTY_KEY = 'pmu_deleted_faculty_ids';
+const DEFAULT_MARKS: Mark[] = [
+  { id: 'e0000001-0000-0000-0000-000000000001', mark_value: 1 },
+  { id: 'e0000002-0000-0000-0000-000000000002', mark_value: 2 },
+  { id: 'e0000007-0000-0000-0000-000000000007', mark_value: 7 },
+  { id: 'e0000008-0000-0000-0000-000000000008', mark_value: 8 },
+  { id: 'e0000010-0000-0000-0000-000000000010', mark_value: 10 },
+  { id: 'e0000015-0000-0000-0000-000000000015', mark_value: 15 },
+  { id: 'e0000020-0000-0000-0000-000000000020', mark_value: 20 }
+];
+
+// Clear legacy mock caches from localStorage if present
+if (typeof window !== 'undefined') {
+  const legacyKeys = [
+    'pmu_courses_cache',
+    'pmu_modules_cache',
+    'pmu_cos_cache',
+    'pmu_questions_cache',
+    'pmu_depts_cache',
+    'pmu_deleted_courses_ids',
+    'pmu_deleted_course_codes',
+    'pmu_deleted_modules_ids',
+    'pmu_deleted_cos_ids',
+    'pmu_deleted_depts_ids',
+    'pmu_deleted_faculty_ids'
+  ];
+  legacyKeys.forEach(k => {
+    try {
+      localStorage.removeItem(k);
+    } catch {}
+  });
+}
 
 export class MasterDataService {
-  private static memoryStore: Record<string, any[]> = {};
-
-  static getDeletedIds(key: string): Set<string> {
-    const list = this.getLocal<string>(key);
-    return new Set(list || []);
-  }
-
-  static addDeletedId(key: string, id: string): void {
-    const ids = this.getDeletedIds(key);
-    ids.add(id);
-    this.saveLocal(key, Array.from(ids));
-  }
-
-  static removeDeletedId(key: string, id: string): void {
-    const ids = this.getDeletedIds(key);
-    ids.delete(id);
-    this.saveLocal(key, Array.from(ids));
-  }
-
-  private static getLocal<T>(key: string): T[] {
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem(key);
-        if (cached) return JSON.parse(cached);
-      } catch (e) {
-        console.warn(`Failed to parse cache for ${key}:`, e);
-      }
-    }
-    return (this.memoryStore[key] as T[]) || [];
-  }
-
-  private static saveLocal<T>(key: string, items: T[]): void {
-    this.memoryStore[key] = items;
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(key, JSON.stringify(items));
-      } catch (e) {
-        console.warn(`Failed to set cache for ${key}:`, e);
-      }
-    }
-  }
-
   // DEPARTMENTS
   static async getDepartments(): Promise<Department[]> {
-    let dbDepts: Department[] = [];
     try {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('departments')
         .select('*')
-        .order('code', { ascending: true });
+        .order('name', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        dbDepts = data as Department[];
+        return data as Department[];
       }
     } catch (e) {
-      console.warn('Supabase depts fetch error, using local fallback:', e);
+      console.warn('Supabase depts fetch error:', e);
     }
-
-    const deletedIds = this.getDeletedIds(DELETED_DEPTS_KEY);
-    const localDepts = this.getLocal<Department>(DEPTS_CACHE_KEY).filter(d => !deletedIds.has(d.id));
-    const map = new Map<string, Department>();
-    INITIAL_DEPARTMENTS.filter(d => !deletedIds.has(d.id)).forEach(d => map.set(d.id, d));
-    dbDepts.filter(d => !deletedIds.has(d.id)).forEach(d => map.set(d.id, d));
-    localDepts.forEach(d => map.set(d.id, d));
-
-    const result = Array.from(map.values()).sort((a, b) => a.code.localeCompare(b.code));
-    if (result.length > 0 && typeof window !== 'undefined') {
-      this.saveLocal(DEPTS_CACHE_KEY, result);
-    }
-    return result;
+    return [];
   }
 
   static async saveDepartment(dept: Partial<Department>): Promise<Department> {
@@ -118,50 +84,42 @@ export class MasterDataService {
       name: dept.name || 'New Department'
     };
 
-    this.removeDeletedId(DELETED_DEPTS_KEY, payload.id);
+    const { data, error } = await supabase
+      .from('departments')
+      .upsert(payload)
+      .select()
+      .single();
 
-    try {
-      const { data, error } = await supabase
-        .from('departments')
-        .upsert(payload)
-        .select()
-        .single();
-
-      if (!error && data) {
-        payload.id = data.id;
-        payload.code = data.code;
-        payload.name = data.name;
-      }
-    } catch (e) {
-      console.error('Save department exception:', e);
+    if (error) {
+      console.error('Save department error:', error);
+      throw error;
     }
-
-    const current = await this.getDepartments();
-    const index = current.findIndex(d => d.id === payload.id);
-    let updated: Department[];
-    if (index >= 0) {
-      updated = [...current];
-      updated[index] = payload as Department;
-    } else {
-      updated = [...current, payload as Department];
-    }
-    this.saveLocal(DEPTS_CACHE_KEY, updated);
-
-    return payload as Department;
+    return data as Department;
   }
 
   static async deleteDepartment(id: string): Promise<void> {
-    this.addDeletedId(DELETED_DEPTS_KEY, id);
-
-    const current = this.getLocal<Department>(DEPTS_CACHE_KEY);
-    const updated = current.filter(d => d.id !== id);
-    this.saveLocal(DEPTS_CACHE_KEY, updated);
-
+    const supabase = createClient();
     try {
-      const supabase = createClient();
-      await supabase.from('departments').delete().eq('id', id);
+      // Find and delete any courses belonging to this department first
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('department_id', id);
+
+      if (courses && courses.length > 0) {
+        for (const c of courses) {
+          await this.deleteCourse(c.id);
+        }
+      }
+
+      const { error } = await supabase.from('departments').delete().eq('id', id);
+      if (error) {
+        console.error('Delete department error:', error);
+        throw error;
+      }
     } catch (e) {
       console.error('Delete department exception:', e);
+      throw e;
     }
   }
 
@@ -171,17 +129,16 @@ export class MasterDataService {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('faculty_profiles')
-        .select('*, department:departments(*)');
+        .select('*, department:departments(*)')
+        .order('full_name', { ascending: true });
 
-      if (error) {
-        console.error('Supabase faculty error:', error);
-      } else if (data) {
+      if (!error && data && data.length > 0) {
         return data as FacultyProfile[];
       }
     } catch (e) {
       console.warn('Supabase faculty fetch exception:', e);
     }
-    return INITIAL_FACULTY;
+    return [];
   }
 
   static async saveFaculty(profile: Partial<FacultyProfile>): Promise<FacultyProfile> {
@@ -199,34 +156,35 @@ export class MasterDataService {
       can_create_questions: profile.can_create_questions ?? true
     };
 
-    try {
-      const { data, error } = await supabase
-        .from('faculty_profiles')
-        .upsert(payload)
-        .select('*, department:departments(*)')
-        .single();
+    const { data, error } = await supabase
+      .from('faculty_profiles')
+      .upsert(payload)
+      .select('*, department:departments(*)')
+      .single();
 
-      if (error) console.error('Save faculty error:', error);
-      else if (data) return data as FacultyProfile;
-    } catch (e) {
-      console.error('Save faculty exception:', e);
+    if (error) {
+      console.error('Save faculty error:', error);
+      throw error;
     }
-    return payload as FacultyProfile;
+    return data as FacultyProfile;
   }
 
   static async deleteFaculty(id: string): Promise<void> {
     try {
       const supabase = createClient();
       const { error } = await supabase.from('faculty_profiles').delete().eq('id', id);
-      if (error) console.error('Delete faculty error:', error);
+      if (error) {
+        console.error('Delete faculty error:', error);
+        throw error;
+      }
     } catch (e) {
       console.error('Delete faculty exception:', e);
+      throw e;
     }
   }
 
   // COURSES
   static async getCourses(departmentId?: string): Promise<Course[]> {
-    let dbCourses: Course[] = [];
     try {
       const supabase = createClient();
       let query = supabase
@@ -239,25 +197,14 @@ export class MasterDataService {
       }
 
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        dbCourses = data as Course[];
+      if (!error && data) {
+        return data as Course[];
       }
+      if (error) console.error('Supabase courses fetch error:', error);
     } catch (e) {
       console.warn('Supabase courses fetch exception:', e);
     }
-
-    const deletedIds = this.getDeletedIds(DELETED_COURSES_KEY);
-    const localCourses = this.getLocal<Course>(COURSES_CACHE_KEY).filter(c => !deletedIds.has(c.id));
-    const map = new Map<string, Course>();
-    INITIAL_COURSES.filter(c => !deletedIds.has(c.id)).forEach(c => map.set(c.id, c));
-    dbCourses.filter(c => !deletedIds.has(c.id)).forEach(c => map.set(c.id, c));
-    localCourses.forEach(c => map.set(c.id, c));
-
-    let allCourses = Array.from(map.values());
-    if (departmentId) {
-      allCourses = allCourses.filter(c => c.department_id === departmentId);
-    }
-    return allCourses.sort((a, b) => a.code.localeCompare(b.code));
+    return [];
   }
 
   static async saveCourse(course: Partial<Course>): Promise<Course> {
@@ -266,82 +213,51 @@ export class MasterDataService {
       id: course.id || crypto.randomUUID(),
       code: course.code?.toUpperCase() || 'CS000',
       name: course.name || 'New Course',
-      department_id: course.department_id || INITIAL_DEPARTMENTS[0].id,
+      department_id: course.department_id,
       semester: course.semester || 1,
       academic_year: course.academic_year || '2025-2026'
     };
 
-    this.removeDeletedId(DELETED_COURSES_KEY, payload.id);
+    const { data, error } = await supabase
+      .from('courses')
+      .upsert(payload)
+      .select('*, department:departments(*)')
+      .single();
 
-    try {
-      const { data, error } = await supabase
-        .from('courses')
-        .upsert(payload)
-        .select('*, department:departments(*)')
-        .single();
-
-      if (!error && data) {
-        const full = data as Course;
-        const current = this.getLocal<Course>(COURSES_CACHE_KEY);
-        const map = new Map<string, Course>();
-        INITIAL_COURSES.forEach(c => map.set(c.id, c));
-        current.forEach(c => map.set(c.id, c));
-        map.set(full.id, full);
-        this.saveLocal(COURSES_CACHE_KEY, Array.from(map.values()));
-        return full;
-      }
-    } catch (e) {
-      console.error('Save course exception:', e);
+    if (error) {
+      console.error('Save course error:', error);
+      throw error;
     }
-
-    const current = this.getLocal<Course>(COURSES_CACHE_KEY);
-    const map = new Map<string, Course>();
-    INITIAL_COURSES.forEach(c => map.set(c.id, c));
-    current.forEach(c => map.set(c.id, c));
-    map.set(payload.id, payload as Course);
-    this.saveLocal(COURSES_CACHE_KEY, Array.from(map.values()));
-
-    return payload as Course;
+    return data as Course;
   }
 
   static async deleteCourse(id: string): Promise<void> {
-    // 1. Mark course as permanently deleted
-    this.addDeletedId(DELETED_COURSES_KEY, id);
-
-    // 2. Remove course from local cache
-    const current = this.getLocal<Course>(COURSES_CACHE_KEY);
-    const updated = current.filter(c => c.id !== id);
-    this.saveLocal(COURSES_CACHE_KEY, updated);
-
-    // 3. Mark all dependent modules and COs as deleted and remove from cache
-    const currentModules = this.getLocal<Module>(MODULES_CACHE_KEY);
-    const removedModuleIds = currentModules.filter(m => m.course_id === id).map(m => m.id);
-    removedModuleIds.forEach(mId => this.addDeletedId(DELETED_MODULES_KEY, mId));
-    this.saveLocal(MODULES_CACHE_KEY, currentModules.filter(m => m.course_id !== id));
-
-    const currentCOs = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
-    const removedCOIds = currentCOs.filter(c => c.course_id === id).map(c => c.id);
-    removedCOIds.forEach(coId => this.addDeletedId(DELETED_COS_KEY, coId));
-    this.saveLocal(COS_CACHE_KEY, currentCOs.filter(c => c.course_id !== id));
-
-    // 4. Cascade delete in Supabase in correct dependency order
+    const supabase = createClient();
     try {
-      const supabase = createClient();
+      // 1. Delete questions linked to this course
       await supabase.from('questions').delete().eq('course_id', id);
+      // 2. Delete generated papers
       await supabase.from('generated_papers').delete().eq('course_id', id);
+      // 3. Delete exam templates
       await supabase.from('exam_templates').delete().eq('course_id', id);
+      // 4. Delete course outcomes
       await supabase.from('course_outcomes').delete().eq('course_id', id);
+      // 5. Delete modules
       await supabase.from('modules').delete().eq('course_id', id);
+      // 6. Delete course
       const { error } = await supabase.from('courses').delete().eq('id', id);
-      if (error) console.warn('Supabase delete course returned error:', error);
+      if (error) {
+        console.error('Supabase delete course returned error:', error);
+        throw error;
+      }
     } catch (e) {
-      console.warn('Delete course database exception:', e);
+      console.error('Delete course exception:', e);
+      throw e;
     }
   }
 
   // MODULES
   static async getModules(courseId?: string): Promise<Module[]> {
-    let dbModules: Module[] = [];
     try {
       const supabase = createClient();
       let query = supabase
@@ -354,93 +270,56 @@ export class MasterDataService {
       }
 
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        dbModules = data as Module[];
+      if (!error && data) {
+        return data as Module[];
       }
+      if (error) console.error('Supabase modules fetch error:', error);
     } catch (e) {
       console.warn('Supabase modules fetch exception:', e);
     }
-
-    const deletedIds = this.getDeletedIds(DELETED_MODULES_KEY);
-    const deletedCourseIds = this.getDeletedIds(DELETED_COURSES_KEY);
-    const isModuleValid = (m: Module) => !deletedIds.has(m.id) && !deletedCourseIds.has(m.course_id);
-
-    const localModules = this.getLocal<Module>(MODULES_CACHE_KEY).filter(isModuleValid);
-    const map = new Map<string, Module>();
-    INITIAL_MODULES.filter(isModuleValid).forEach(m => map.set(m.id, m));
-    dbModules.filter(isModuleValid).forEach(m => map.set(m.id, m));
-    localModules.forEach(m => map.set(m.id, m));
-
-    let allModules = Array.from(map.values());
-    if (courseId) {
-      allModules = allModules.filter(m => m.course_id === courseId);
-    }
-    return allModules.sort((a, b) => a.module_number - b.module_number);
+    return [];
   }
 
   static async saveModule(mod: Partial<Module>): Promise<Module> {
     const supabase = createClient();
     const payload = {
       id: mod.id || crypto.randomUUID(),
-      course_id: mod.course_id || INITIAL_COURSES[0].id,
+      course_id: mod.course_id,
       module_number: mod.module_number || 1,
       title: mod.title || 'New Module',
       description: mod.description || ''
     };
 
-    this.removeDeletedId(DELETED_MODULES_KEY, payload.id);
+    const { data, error } = await supabase
+      .from('modules')
+      .upsert(payload)
+      .select('*, course:courses(*)')
+      .single();
 
-    try {
-      const { data, error } = await supabase
-        .from('modules')
-        .upsert(payload)
-        .select()
-        .single();
-
-      if (!error && data) {
-        const full = data as Module;
-        const current = this.getLocal<Module>(MODULES_CACHE_KEY);
-        const map = new Map<string, Module>();
-        INITIAL_MODULES.forEach(m => map.set(m.id, m));
-        current.forEach(m => map.set(m.id, m));
-        map.set(full.id, full);
-        this.saveLocal(MODULES_CACHE_KEY, Array.from(map.values()));
-        return full;
-      }
-    } catch (e) {
-      console.error('Save module exception:', e);
+    if (error) {
+      console.error('Save module error:', error);
+      throw error;
     }
-
-    const current = this.getLocal<Module>(MODULES_CACHE_KEY);
-    const map = new Map<string, Module>();
-    INITIAL_MODULES.forEach(m => map.set(m.id, m));
-    current.forEach(m => map.set(m.id, m));
-    map.set(payload.id, payload as Module);
-    this.saveLocal(MODULES_CACHE_KEY, Array.from(map.values()));
-
-    return payload as Module;
+    return data as Module;
   }
 
   static async deleteModule(id: string): Promise<void> {
-    this.addDeletedId(DELETED_MODULES_KEY, id);
-
-    const current = this.getLocal<Module>(MODULES_CACHE_KEY);
-    const updated = current.filter(m => m.id !== id);
-    this.saveLocal(MODULES_CACHE_KEY, updated);
-
+    const supabase = createClient();
     try {
-      const supabase = createClient();
       await supabase.from('questions').delete().eq('module_id', id);
       const { error } = await supabase.from('modules').delete().eq('id', id);
-      if (error) console.warn('Supabase delete module error:', error);
+      if (error) {
+        console.error('Delete module error:', error);
+        throw error;
+      }
     } catch (e) {
-      console.warn('Delete module exception:', e);
+      console.error('Delete module exception:', e);
+      throw e;
     }
   }
 
   // COURSE OUTCOMES (CO)
   static async getCourseOutcomes(courseId?: string): Promise<CourseOutcome[]> {
-    let dbCos: CourseOutcome[] = [];
     try {
       const supabase = createClient();
       let query = supabase
@@ -453,102 +332,53 @@ export class MasterDataService {
       }
 
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        dbCos = data as CourseOutcome[];
+      if (!error && data) {
+        return data as CourseOutcome[];
       }
+      if (error) console.error('Supabase getCourseOutcomes error:', error);
     } catch (e) {
       console.warn('Supabase CO fetch exception:', e);
     }
-
-    const deletedIds = this.getDeletedIds(DELETED_COS_KEY);
-    const deletedCourseIds = this.getDeletedIds(DELETED_COURSES_KEY);
-    const isCOValid = (c: CourseOutcome) => !deletedIds.has(c.id) && !deletedCourseIds.has(c.course_id);
-
-    const localCos = this.getLocal<CourseOutcome>(COS_CACHE_KEY).filter(isCOValid);
-    const map = new Map<string, CourseOutcome>();
-    INITIAL_COS.filter(isCOValid).forEach(c => map.set(c.id, c));
-    dbCos.filter(isCOValid).forEach(c => map.set(c.id, c));
-    localCos.forEach(c => map.set(c.id, c));
-
-    let allCos = Array.from(map.values());
-    if (courseId) {
-      allCos = allCos.filter(c => c.course_id === courseId);
-    }
-    return allCos.sort((a, b) => a.code.localeCompare(b.code));
+    return [];
   }
 
   static async saveCourseOutcome(co: Partial<CourseOutcome>): Promise<CourseOutcome> {
     const supabase = createClient();
-    const id = co.id || crypto.randomUUID();
-    const courseId = co.course_id || INITIAL_COURSES[0].id;
-    const code = co.code || `CO${co.co_number || 1}`;
-    const description = co.description || 'Course outcome description';
-
-    this.removeDeletedId(DELETED_COS_KEY, id);
-
-    const dbPayload = {
-      id,
-      course_id: courseId,
-      code,
-      description
-    };
-
-    const fullCO: CourseOutcome = {
-      ...co,
-      id,
-      course_id: courseId,
-      code,
-      description,
+    const payload = {
+      id: co.id || crypto.randomUUID(),
+      course_id: co.course_id,
+      code: co.code || `CO${co.co_number || 1}`,
+      description: co.description || 'Course outcome description',
       co_number: co.co_number || 1,
       k_level_code: co.k_level_code || 'K1',
       k_level_id: co.k_level_id
     };
 
-    try {
-      const { data, error } = await supabase
-        .from('course_outcomes')
-        .upsert(dbPayload)
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from('course_outcomes')
+      .upsert(payload)
+      .select()
+      .single();
 
-      if (!error && data) {
-        const merged = { ...fullCO, ...data };
-        const current = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
-        const map = new Map<string, CourseOutcome>();
-        INITIAL_COS.forEach(c => map.set(c.id, c));
-        current.forEach(c => map.set(c.id, c));
-        map.set(merged.id, merged);
-        this.saveLocal(COS_CACHE_KEY, Array.from(map.values()));
-        return merged;
-      }
-    } catch (e) {
-      console.error('Save CO exception:', e);
+    if (error) {
+      console.error('Save CO error:', error);
+      throw error;
     }
-
-    const current = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
-    const map = new Map<string, CourseOutcome>();
-    INITIAL_COS.forEach(c => map.set(c.id, c));
-    current.forEach(c => map.set(c.id, c));
-    map.set(id, fullCO);
-    this.saveLocal(COS_CACHE_KEY, Array.from(map.values()));
-
-    return fullCO;
+    return data as CourseOutcome;
   }
 
   static async deleteCourseOutcome(id: string): Promise<void> {
-    this.addDeletedId(DELETED_COS_KEY, id);
-
-    const current = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
-    const updated = current.filter(c => c.id !== id);
-    this.saveLocal(COS_CACHE_KEY, updated);
-
+    const supabase = createClient();
     try {
-      const supabase = createClient();
       await supabase.from('questions').delete().eq('course_outcome_id', id);
       const { error } = await supabase.from('course_outcomes').delete().eq('id', id);
-      if (error) console.warn('Supabase delete CO error:', error);
+      if (error) {
+        console.error('Delete CO error:', error);
+        throw error;
+      }
     } catch (e) {
-      console.warn('Delete CO exception:', e);
+      console.error('Delete CO exception:', e);
+      throw e;
     }
   }
 
@@ -557,15 +387,13 @@ export class MasterDataService {
     try {
       const supabase = createClient();
       const { data, error } = await supabase.from('k_levels').select('*').order('code');
-      if (error) {
-        console.error('Supabase KLevels fetch error:', error);
-      } else if (data) {
+      if (!error && data && data.length > 0) {
         return data as KLevel[];
       }
     } catch (e) {
       console.warn('Supabase KLevels fetch exception:', e);
     }
-    return INITIAL_KLEVELS;
+    return DEFAULT_KLEVELS;
   }
 
   // QUESTION TYPES & MARKS
@@ -573,30 +401,26 @@ export class MasterDataService {
     try {
       const supabase = createClient();
       const { data, error } = await supabase.from('question_types').select('*').order('code');
-      if (error) {
-        console.error('Supabase QuestionTypes fetch error:', error);
-      } else if (data) {
+      if (!error && data && data.length > 0) {
         return data as QuestionType[];
       }
     } catch (e) {
       console.warn('Supabase QuestionTypes fetch exception:', e);
     }
-    return INITIAL_QUESTION_TYPES;
+    return DEFAULT_QUESTION_TYPES;
   }
 
   static async getMarks(): Promise<Mark[]> {
     try {
       const supabase = createClient();
       const { data, error } = await supabase.from('marks').select('*').order('mark_value');
-      if (error) {
-        console.error('Supabase Marks fetch error:', error);
-      } else if (data) {
+      if (!error && data && data.length > 0) {
         return data as Mark[];
       }
     } catch (e) {
       console.warn('Supabase Marks fetch exception:', e);
     }
-    return INITIAL_MARKS;
+    return DEFAULT_MARKS;
   }
 
   // EXAM TEMPLATES
@@ -612,19 +436,13 @@ export class MasterDataService {
       }
 
       const { data, error } = await query;
-      if (error) {
-        console.error('Supabase templates fetch error:', error);
-      } else if (data) {
+      if (!error && data) {
         return data as ExamTemplate[];
       }
     } catch (e) {
       console.warn('Supabase templates fetch exception:', e);
     }
-
-    if (courseId) {
-      return INITIAL_EXAM_TEMPLATES.filter(t => t.course_id === courseId);
-    }
-    return INITIAL_EXAM_TEMPLATES;
+    return [];
   }
 
   static async saveExamTemplate(template: Partial<ExamTemplate>): Promise<ExamTemplate> {
@@ -632,35 +450,37 @@ export class MasterDataService {
     const payload = {
       id: template.id || crypto.randomUUID(),
       title: template.title || 'Custom Exam Template',
-      department_id: template.department_id || INITIAL_DEPARTMENTS[0].id,
-      course_id: template.course_id || INITIAL_COURSES[0].id,
+      department_id: template.department_id,
+      course_id: template.course_id,
       total_marks: template.total_marks || 100,
       duration_minutes: template.duration_minutes || 180,
       instructions: template.instructions || ['Answer all questions.']
     };
 
-    try {
-      const { data, error } = await supabase
-        .from('exam_templates')
-        .upsert(payload)
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from('exam_templates')
+      .upsert(payload)
+      .select()
+      .single();
 
-      if (error) console.error('Save template error:', error);
-      else if (data) return data as ExamTemplate;
-    } catch (e) {
-      console.error('Save template exception:', e);
+    if (error) {
+      console.error('Save template error:', error);
+      throw error;
     }
-    return payload as ExamTemplate;
+    return data as ExamTemplate;
   }
 
   static async deleteExamTemplate(id: string): Promise<void> {
     try {
       const supabase = createClient();
       const { error } = await supabase.from('exam_templates').delete().eq('id', id);
-      if (error) console.error('Delete template error:', error);
+      if (error) {
+        console.error('Delete template error:', error);
+        throw error;
+      }
     } catch (e) {
       console.error('Delete template exception:', e);
+      throw e;
     }
   }
 }

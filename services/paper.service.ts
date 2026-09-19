@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
 import { GeneratedPaper, GeneratedPaperSnapshot } from '@/types';
-import { INITIAL_GENERATED_PAPERS } from '@/lib/mock-data';
 import { MasterDataService } from './master-data.service';
 
 export class PaperService {
@@ -12,14 +11,14 @@ export class PaperService {
         .select('*, department:departments(*), course:courses(*)')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return data as GeneratedPaper[];
       }
     } catch (e) {
       console.warn('Supabase getPapers error:', e);
     }
 
-    return INITIAL_GENERATED_PAPERS;
+    return [];
   }
 
   static async getPaperById(id: string): Promise<GeneratedPaper | null> {
