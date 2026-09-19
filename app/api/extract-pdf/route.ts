@@ -18,22 +18,28 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
 
-    // Ensure worker is available in vendor-chunks if Next.js bundled it
-    const vendorDir = path.join(process.cwd(), '.next/server/vendor-chunks');
-    const srcWorker = path.join(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
-    if (fs.existsSync(vendorDir) && fs.existsSync(srcWorker)) {
-      const targetWorker = path.join(vendorDir, 'pdf.worker.mjs');
-      if (!fs.existsSync(targetWorker)) {
-        try {
-          fs.copyFileSync(srcWorker, targetWorker);
-        } catch (_) {}
+    // In Node.js / Vercel serverless environments, initialize the PDF worker in-process
+    // so PDF.js does not attempt to locate or dynamically import external worker files from disk.
+    if (!(globalThis as any).pdfjsWorker) {
+      try {
+        const pdfWorker = await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
+        (globalThis as any).pdfjsWorker = pdfWorker;
+      } catch (workerErr) {
+        console.warn('Failed to initialize pdfjs worker in-process:', workerErr);
       }
     }
 
     // Load PDF using pdfjs legacy build for Node.js
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    if (pdfjs.GlobalWorkerOptions && fs.existsSync(srcWorker)) {
-      pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(srcWorker).href;
+
+    const publicWorker = path.join(process.cwd(), 'public/pdf.worker.mjs');
+    const srcWorker = path.join(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
+    if (pdfjs.GlobalWorkerOptions) {
+      if (fs.existsSync(publicWorker)) {
+        pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(publicWorker).href;
+      } else if (fs.existsSync(srcWorker)) {
+        pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(srcWorker).href;
+      }
     }
 
     const doc = await pdfjs.getDocument({

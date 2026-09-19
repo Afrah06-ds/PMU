@@ -9,6 +9,9 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ['@supabase/supabase-js', '@supabase/ssr', 'pdfjs-dist'],
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./node_modules/pdfjs-dist/**/*'],
+    },
   },
   webpack: (config) => {
     config.resolve.alias = {
