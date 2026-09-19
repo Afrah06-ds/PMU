@@ -32,6 +32,22 @@ export interface Course {
   academic_year: string;
   department?: Department;
   created_at?: string;
+  // PMIST Question Bank Course Details
+  programme_code?: string;
+  programme_name?: string;
+  course_category?: string;
+  course_type?: string;
+  batch?: string;
+  learning_hours?: number;
+  no_of_learners?: number;
+  l_hours?: number;
+  t_hours?: number;
+  p_hours?: number;
+  c_credits?: number;
+  ca_marks?: number;
+  ese_marks?: number;
+  course_coordinator?: string;
+  course_teacher?: string;
 }
 
 export interface Module {
@@ -97,6 +113,12 @@ export interface Question {
   marks_id: string;
   mark_value: number;
   question_text: string;
+  key_answer?: string;
+  evaluation_scheme?: string;
+  unit_name?: string;
+  unit_syllabus?: string;
+  section_type?: 'SECTION_A' | 'SECTION_B' | 'SECTION_C' | 'A' | 'B' | 'C';
+  q_no?: number | string;
   created_by?: string;
   created_at?: string;
   updated_at?: string;

@@ -45,10 +45,20 @@ export default function PaperPreviewPage() {
   }, [id]);
 
   const handleRegenerate = async () => {
-    if (!config) return;
+    if (!config || !paper) return;
     const res = await QuestionGeneratorEngine.generatePaper({
       department_id: config.department_id,
       course_id: config.course_id,
+      college_name: paper.college_name,
+      exam_name: paper.exam_name,
+      exam_name_line1: paper.exam_name_line1,
+      exam_name_line2: paper.exam_name_line2,
+      target_branch_class: paper.target_branch_class,
+      semester: paper.semester,
+      academic_year: paper.academic_year,
+      date_of_exam: paper.date_of_exam,
+      duration_minutes: paper.duration_minutes,
+      instructions: paper.instructions,
       sections: config.sections
     });
 

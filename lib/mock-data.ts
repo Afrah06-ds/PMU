@@ -16,7 +16,8 @@ export const INITIAL_DEPARTMENTS: Department[] = [
   { id: '11111111-1111-1111-1111-111111111111', code: 'CSE', name: 'Department of Computer Science & Engineering' },
   { id: '22222222-2222-2222-2222-222222222222', code: 'ECE', name: 'Department of Electronics & Communication Engineering' },
   { id: '33333333-3333-3333-3333-333333333333', code: 'MECH', name: 'Department of Mechanical Engineering' },
-  { id: '44444444-4444-4444-4444-444444444444', code: 'EEE', name: 'Department of Electrical & Electronics Engineering' }
+  { id: '44444444-4444-4444-4444-444444444444', code: 'EEE', name: 'Department of Electrical & Electronics Engineering' },
+  { id: '55555555-5555-5555-5555-555555555555', code: 'INFORMATICS', name: 'Department of Informatics' }
 ];
 
 export const INITIAL_FACULTY: FacultyProfile[] = [
@@ -73,6 +74,30 @@ export const INITIAL_COURSES: Course[] = [
     semester: 3,
     academic_year: '2025-2026',
     department: INITIAL_DEPARTMENTS[0]
+  },
+  {
+    id: 'c-xds601',
+    code: 'XDS601',
+    name: 'Big Data Analytics',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    semester: 6,
+    academic_year: '2025-2026',
+    programme_code: '172',
+    programme_name: 'B.Sc. Data Science',
+    course_category: 'Programme Core Courses',
+    course_type: 'Theory Course',
+    batch: '2023 - 2026',
+    learning_hours: 45,
+    no_of_learners: 58,
+    l_hours: 3,
+    t_hours: 0,
+    p_hours: 0,
+    c_credits: 3,
+    ca_marks: 40,
+    ese_marks: 60,
+    course_coordinator: 'Dr. A. MUTHAMIZH SELVAN, Associate Professor, Department of Informatics',
+    course_teacher: 'Mr. N. SENTHIL KUMAR, Assistant Professor (SS), Department of Informatics',
+    department: { id: '55555555-5555-5555-5555-555555555555', code: 'INFORMATICS', name: 'Department of Informatics' }
   }
 ];
 
@@ -96,7 +121,44 @@ export const INITIAL_MODULES: Module[] = [
   { id: 'bccccccc-cccc-cccc-cccc-cccccccccccc', course_id: 'c3333333-3333-3333-3333-333333333333', module_number: 2, title: 'Inheritance, Interfaces & Polymorphism', description: 'Single/Multilevel Inheritance, Method Overriding, Abstract Classes, Interfaces' },
   { id: 'bddddddd-dddd-dddd-dddd-dddddddddddd', course_id: 'c3333333-3333-3333-3333-333333333333', module_number: 3, title: 'Exception Handling & Multithreaded Programming', description: 'Try-Catch-Finally, Custom Exception Classes, Thread Lifecycle & Synchronization' },
   { id: 'beeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', course_id: 'c3333333-3333-3333-3333-333333333333', module_number: 4, title: 'Java I/O Streams, Generics & Collection Framework', description: 'Byte & Character Streams, Serialization, ArrayList, HashMap & Iterators' },
-  { id: 'bfffffff-ffff-ffff-ffff-ffffffffffff', course_id: 'c3333333-3333-3333-3333-333333333333', module_number: 5, title: 'Event-Driven GUI Programming & Swing Components', description: 'AWT, Swing Containers, Event Delegation Model, Layout Managers' }
+  { id: 'bfffffff-ffff-ffff-ffff-ffffffffffff', course_id: 'c3333333-3333-3333-3333-333333333333', module_number: 5, title: 'Event-Driven GUI Programming & Swing Components', description: 'AWT, Swing Containers, Event Delegation Model, Layout Managers' },
+  
+  // XDS601 - Big Data Analytics
+  {
+    id: 'mod-xds601-1',
+    course_id: 'c-xds601',
+    module_number: 1,
+    title: 'FUNDAMENTALS OF BIG DATA',
+    description: 'Understanding Big Data - Concepts and Terminologies - Big Data Characteristics - 3Vs to 32Vs Definition and Big Data Venn diagram - Different Types of Data - Evolution of Big Data - Sources of Big Data - Big Data Infrastructure - Big Data Adoption and Planning Considerations - Big Data Life Cycle - Big Data Technology - Big Data Applications and Use Cases.'
+  },
+  {
+    id: 'mod-xds601-2',
+    course_id: 'c-xds601',
+    module_number: 2,
+    title: 'BIG DATA STORAGE CONCEPTS',
+    description: 'Cluster Computing - Distribution Models - File Systems and Distributed File Systems - Relational and Non-Relational Databases NoSQL Data Store - NoSQL Data Architecture - NoSQL to Manage Big Data: MongoDB, Cassandra - Scaling Up and Scaling Out Storage - Sharding with: Replication, Master-Slave and Peer to-Peer - CAP Theorem - ACID - BASE.'
+  },
+  {
+    id: 'mod-xds601-3',
+    course_id: 'c-xds601',
+    module_number: 3,
+    title: 'HADOOP AND DISTRIBUTED FRAMEWORKS',
+    description: 'Hadoop ecosystem: Core components and features - Ecosystem components - Streaming and pipes - Hadoop distributed file systems (HDFS) - MapReduce framework and programming model - Hadoop Yarn: Execution model and improvements - Hadoop Tools: Ambari, HBase, Hive, Pig, and Mahout.'
+  },
+  {
+    id: 'mod-xds601-4',
+    course_id: 'c-xds601',
+    module_number: 4,
+    title: 'MAP-REDUCE, HIVE and PIG',
+    description: 'Map-Reduce tasks: Map and Reduce - Processing steps in Map-Reduce - Coping with node failures and fault tolerance - Composing Map-Reduce for calculations and algorithms - Hive: Architecture, Data types, File formats, Data model, Workflow, and Built-in functions - HiveQL: DDL, DML, Querying, Aggregation, Join, and Group by Clause - Pig: Apache Pig, Pig Latin data model, and Developing scripts.'
+  },
+  {
+    id: 'mod-xds601-5',
+    course_id: 'c-xds601',
+    module_number: 5,
+    title: 'BIG DATA ANALYSIS TECHNIQUES',
+    description: 'Big Data Analytics: Terminologies, Life cycle, and Techniques - Quantitative Analysis - Qualitative Analysis - Data Mining - Statistical Analysis - Machine Learning - Semantic Analysis - Visual Analysis Techniques - Big Data business intelligence - Real-Time analytics processing - Case Studies: Correlation, Regression, Time Series Plot, Clustering and Classification.'
+  }
 ];
 
 export const INITIAL_COS: CourseOutcome[] = [
@@ -112,7 +174,15 @@ export const INITIAL_COS: CourseOutcome[] = [
   { id: 'ca777777-7777-7777-7777-777777777777', course_id: 'c3333333-3333-3333-3333-333333333333', co_number: 2, code: 'CO2', description: 'Apply inheritance, polymorphism, and interfaces to achieve code reusability.', k_level_code: 'K3' },
   { id: 'ca888888-8888-8888-8888-888888888888', course_id: 'c3333333-3333-3333-3333-333333333333', co_number: 3, code: 'CO3', description: 'Implement robust error handling using exceptions and multithreaded execution.', k_level_code: 'K4' },
   { id: 'ca999999-9999-9999-9999-999999999999', course_id: 'c3333333-3333-3333-3333-333333333333', co_number: 4, code: 'CO4', description: 'Utilize Java I/O streams and Collections Framework for data manipulation.', k_level_code: 'K4' },
-  { id: 'caaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', course_id: 'c3333333-3333-3333-3333-333333333333', co_number: 5, code: 'CO5', description: 'Design interactive GUI applications using Swing and event-driven delegation.', k_level_code: 'K6' }
+  { id: 'caaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', course_id: 'c3333333-3333-3333-3333-333333333333', co_number: 5, code: 'CO5', description: 'Design interactive GUI applications using Swing and event-driven delegation.', k_level_code: 'K6' },
+  
+  // XDS601 COs (From Official PMIST Question Bank Document)
+  { id: 'co-xds601-1', course_id: 'c-xds601', co_number: 1, code: 'CO1', description: 'Describe the fundamentals, terminologies, and life cycle of Big Data', k_level_code: 'K2' },
+  { id: 'co-xds601-2', course_id: 'c-xds601', co_number: 2, code: 'CO2', description: 'Explain storage models and NoSQL databases for managing Big Data', k_level_code: 'K2' },
+  { id: 'co-xds601-3', course_id: 'c-xds601', co_number: 3, code: 'CO3', description: 'Demonstrate the use of Hadoop and its ecosystem for distributed data storage and processing', k_level_code: 'K3' },
+  { id: 'co-xds601-4', course_id: 'c-xds601', co_number: 4, code: 'CO4', description: 'Apply MapReduce, Hive, and Pig for efficient data processing and querying', k_level_code: 'K3' },
+  { id: 'co-xds601-5', course_id: 'c-xds601', co_number: 5, code: 'CO5', description: 'Analyze Big Data using advanced techniques, including statistical and machine learning methods', k_level_code: 'K4' },
+  { id: 'co-xds601-6', course_id: 'c-xds601', co_number: 6, code: 'CO6', description: 'Propose data-driven solutions for real-world problems', k_level_code: 'K3' }
 ];
 
 export const INITIAL_KLEVELS: KLevel[] = [
@@ -133,6 +203,8 @@ export const INITIAL_QUESTION_TYPES: QuestionType[] = [
 export const INITIAL_MARKS: Mark[] = [
   { id: 'e0000001-0000-0000-0000-000000000001', mark_value: 1 },
   { id: 'e0000002-0000-0000-0000-000000000002', mark_value: 2 },
+  { id: 'e0000007-0000-0000-0000-000000000007', mark_value: 7 },
+  { id: 'e0000008-0000-0000-0000-000000000008', mark_value: 8 },
   { id: 'e0000010-0000-0000-0000-000000000010', mark_value: 10 },
   { id: 'e0000015-0000-0000-0000-000000000015', mark_value: 15 },
   { id: 'e0000020-0000-0000-0000-000000000020', mark_value: 20 }
@@ -609,6 +681,563 @@ export const INITIAL_QUESTIONS: Question[] = [
     marks_id: 'e0000015-0000-0000-0000-000000000015',
     mark_value: 15,
     question_text: 'Design a Java Swing GUI application for a Student Grade Calculator with ActionListener implementation, JFrame, JTextField, and JButton controls.'
+  },
+
+  // ----------------------------------------------------
+  // XDS601 - Big Data Analytics (Official PMIST Format)
+  // ----------------------------------------------------
+
+  // UNIT 1: FUNDAMENTALS OF BIG DATA - Section A (Objective)
+  {
+    id: 'xds601-u1-a-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 1,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Big Data is mainly characterized by:',
+    key_answer: '(c)',
+    options: [
+      { option_letter: 'a', option_text: 'Small size', is_correct: false },
+      { option_letter: 'b', option_text: 'Structured format only', is_correct: false },
+      { option_letter: 'c', option_text: 'Large, complex datasets', is_correct: true },
+      { option_letter: 'd', option_text: 'Manual processing', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u1-a-02',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 2,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'The original 3Vs of Big Data are:',
+    key_answer: '(a)',
+    options: [
+      { option_letter: 'a', option_text: 'Volume, Velocity, Variety', is_correct: true },
+      { option_letter: 'b', option_text: 'Value, Veracity, Volume', is_correct: false },
+      { option_letter: 'c', option_text: 'Velocity, Validity, Variety', is_correct: false },
+      { option_letter: 'd', option_text: 'Volume, Visualization, Value', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u1-a-03',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 3,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Which V refers to speed of data generation?',
+    key_answer: '(b)',
+    options: [
+      { option_letter: 'a', option_text: 'Volume', is_correct: false },
+      { option_letter: 'b', option_text: 'Velocity', is_correct: true },
+      { option_letter: 'c', option_text: 'Variety', is_correct: false },
+      { option_letter: 'd', option_text: 'Value', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u1-a-04',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 4,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Which type of data is stored in tables?',
+    key_answer: '(c)',
+    options: [
+      { option_letter: 'a', option_text: 'Unstructured', is_correct: false },
+      { option_letter: 'b', option_text: 'Semi-structured', is_correct: false },
+      { option_letter: 'c', option_text: 'Structured', is_correct: true },
+      { option_letter: 'd', option_text: 'Multimedia', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u1-a-05',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e2222222-2222-2222-2222-222222222222',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 5,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'JSON is an example of:',
+    key_answer: '(b)',
+    options: [
+      { option_letter: 'a', option_text: 'Structured data', is_correct: false },
+      { option_letter: 'b', option_text: 'Semi-structured data', is_correct: true },
+      { option_letter: 'c', option_text: 'Unstructured data', is_correct: false },
+      { option_letter: 'd', option_text: 'Binary data', is_correct: false }
+    ]
+  },
+
+  // UNIT 1: FUNDAMENTALS OF BIG DATA - Section B (Short Answers)
+  {
+    id: 'xds601-u1-b-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 1,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Define Big Data.',
+    key_answer: 'Very large and complex data sets that require advanced tools for storage and processing.'
+  },
+  {
+    id: 'xds601-u1-b-02',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 2,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'What are the 3Vs of Big Data?',
+    key_answer: 'Volume, Velocity, Variety.'
+  },
+  {
+    id: 'xds601-u1-b-03',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e2222222-2222-2222-2222-222222222222',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 3,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Define Volume and Velocity.',
+    key_answer: 'Volume – amount of data; Velocity – speed of data generation and processing.'
+  },
+  {
+    id: 'xds601-u1-b-04',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 4,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'What is structured data?',
+    key_answer: 'Data organized in fixed format like rows and columns in databases.'
+  },
+
+  // UNIT 1: FUNDAMENTALS OF BIG DATA - Section C (Descriptive)
+  {
+    id: 'xds601-u1-c-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e2222222-2222-2222-2222-222222222222',
+    question_type_id: 'd3333333-3333-3333-3333-333333333333',
+    marks_id: 'e0000008-0000-0000-0000-000000000008',
+    mark_value: 8,
+    section_type: 'SECTION_C',
+    q_no: 1,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Explain the 3Vs of Big Data with examples.',
+    evaluation_scheme: `K2 (60% = 5 Marks)
+Concept of 3Vs of Big Data:
+• Volume – large amount of data generated
+• Velocity – speed at which data is generated and processed
+• Variety – different forms of data (text, images, videos)
+K2 (40% = 2 Marks)
+Examples illustrating the 3Vs:
+• Social media data
+• Online transactions`
+  },
+  {
+    id: 'xds601-u1-c-02',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-1',
+    k_level_id: 'e2222222-2222-2222-2222-222222222222',
+    question_type_id: 'd3333333-3333-3333-3333-333333333333',
+    marks_id: 'e0000007-0000-0000-0000-000000000007',
+    mark_value: 7,
+    section_type: 'SECTION_C',
+    q_no: 2,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Describe different types of data in Big Data.',
+    evaluation_scheme: `K2 (60% = 4 Marks)
+Types of data:
+• Structured data
+• Semi-structured data
+• Unstructured data
+K2 (40% = 3 Marks)
+Examples and importance of each data type`
+  },
+  {
+    id: 'xds601-u1-c-03',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-1',
+    course_outcome_id: 'co-xds601-2',
+    k_level_id: 'e3333333-3333-3333-3333-333333333333',
+    question_type_id: 'd3333333-3333-3333-3333-333333333333',
+    marks_id: 'e0000015-0000-0000-0000-000000000015',
+    mark_value: 15,
+    section_type: 'SECTION_C',
+    q_no: 3,
+    unit_name: 'FUNDAMENTALS OF BIG DATA',
+    question_text: 'Explain Big Data infrastructure components.',
+    evaluation_scheme: `K2 (40% = 5 Marks)
+Concept of Big Data infrastructure:
+• Hardware and software framework
+K3 (60% = 10 Marks)
+Major components:
+• Data storage systems
+• Distributed computing frameworks
+• Data processing tools`
+  },
+
+  // UNIT 2: BIG DATA STORAGE CONCEPTS - Section A, B, C
+  {
+    id: 'xds601-u2-a-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-2',
+    course_outcome_id: 'co-xds601-2',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 1,
+    unit_name: 'BIG DATA STORAGE CONCEPTS',
+    question_text: 'Cluster computing refers to ______.',
+    key_answer: '(b)',
+    options: [
+      { option_letter: 'a', option_text: 'Single computer processing', is_correct: false },
+      { option_letter: 'b', option_text: 'Group of interconnected computers working together', is_correct: true },
+      { option_letter: 'c', option_text: 'Cloud storage', is_correct: false },
+      { option_letter: 'd', option_text: 'Database clustering only', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u2-a-02',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-2',
+    course_outcome_id: 'co-xds601-2',
+    k_level_id: 'e2222222-2222-2222-2222-222222222222',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 2,
+    unit_name: 'BIG DATA STORAGE CONCEPTS',
+    question_text: 'Which of the following is an example of a distributed file system?',
+    key_answer: '(a)',
+    options: [
+      { option_letter: 'a', option_text: 'HDFS', is_correct: true },
+      { option_letter: 'b', option_text: 'NTFS', is_correct: false },
+      { option_letter: 'c', option_text: 'FAT32', is_correct: false },
+      { option_letter: 'd', option_text: 'ext4', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u2-b-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-2',
+    course_outcome_id: 'co-xds601-2',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 1,
+    unit_name: 'BIG DATA STORAGE CONCEPTS',
+    question_text: 'Define Cluster Computing.',
+    key_answer: 'A group of interconnected computers working together as a single system to perform tasks.'
+  },
+  {
+    id: 'xds601-u2-b-02',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-2',
+    course_outcome_id: 'co-xds601-2',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 2,
+    unit_name: 'BIG DATA STORAGE CONCEPTS',
+    question_text: 'State the CAP theorem.',
+    key_answer: 'A distributed system can guarantee only two of the three: Consistency, Availability, and Partition Tolerance.'
+  },
+  {
+    id: 'xds601-u2-c-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-2',
+    course_outcome_id: 'co-xds601-2',
+    k_level_id: 'e4444444-4444-4444-4444-444444444444',
+    question_type_id: 'd3333333-3333-3333-3333-333333333333',
+    marks_id: 'e0000015-0000-0000-0000-000000000015',
+    mark_value: 15,
+    section_type: 'SECTION_C',
+    q_no: 1,
+    unit_name: 'BIG DATA STORAGE CONCEPTS',
+    question_text: 'Compare relational and NoSQL databases with advantages and limitations.',
+    evaluation_scheme: `K2 (40% = 6 Marks)
+Concept of database models:
+• Relational databases
+• NoSQL databases
+K4 (40% = 6 Marks)
+Comparison aspects:
+• Data structure
+• Scalability
+K4 (20% = 3 Mark)
+Advantages and limitations`
+  },
+
+  // UNIT 3: HADOOP AND DISTRIBUTED FRAMEWORKS - Section A, B, C
+  {
+    id: 'xds601-u3-a-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-3',
+    course_outcome_id: 'co-xds601-3',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 1,
+    unit_name: 'HADOOP AND DISTRIBUTED FRAMEWORKS',
+    question_text: 'In HDFS, the master node is called ______.',
+    key_answer: '(b)',
+    options: [
+      { option_letter: 'a', option_text: 'DataNode', is_correct: false },
+      { option_letter: 'b', option_text: 'NameNode', is_correct: true },
+      { option_letter: 'c', option_text: 'TaskTracker', is_correct: false },
+      { option_letter: 'd', option_text: 'ResourceManager', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u3-b-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-3',
+    course_outcome_id: 'co-xds601-3',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 1,
+    unit_name: 'HADOOP AND DISTRIBUTED FRAMEWORKS',
+    question_text: 'Define Hadoop.',
+    key_answer: 'An open-source framework used for distributed storage and processing of large datasets across clusters of computers.'
+  },
+  {
+    id: 'xds601-u3-c-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-3',
+    course_outcome_id: 'co-xds601-3',
+    k_level_id: 'e4444444-4444-4444-4444-444444444444',
+    question_type_id: 'd3333333-3333-3333-3333-333333333333',
+    marks_id: 'e0000015-0000-0000-0000-000000000015',
+    mark_value: 15,
+    section_type: 'SECTION_C',
+    q_no: 1,
+    unit_name: 'HADOOP AND DISTRIBUTED FRAMEWORKS',
+    question_text: 'Describe the Hadoop Distributed File System (HDFS) architecture and working principle.',
+    evaluation_scheme: `K2 (40% = 6 Marks)
+Concept of HDFS:
+• Distributed file storage system
+• Designed for large datasets
+K4 (40% = 6 Marks)
+HDFS architecture:
+• NameNode
+• DataNode
+• Block storage mechanism
+K4 (20% = 3 Marks)
+Working principle:
+• Data replication
+• Fault tolerance and data access`
+  },
+
+  // UNIT 4: MAP-REDUCE, HIVE and PIG - Section A, B, C
+  {
+    id: 'xds601-u4-a-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-4',
+    course_outcome_id: 'co-xds601-4',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 1,
+    unit_name: 'MAP-REDUCE, HIVE and PIG',
+    question_text: 'The query language used in Hive is ______.',
+    key_answer: '(b)',
+    options: [
+      { option_letter: 'a', option_text: 'SQL+', is_correct: false },
+      { option_letter: 'b', option_text: 'HiveQL', is_correct: true },
+      { option_letter: 'c', option_text: 'PigQL', is_correct: false },
+      { option_letter: 'd', option_text: 'MapQL', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u4-b-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-4',
+    course_outcome_id: 'co-xds601-4',
+    k_level_id: 'e1111111-1111-1111-1111-111111111111',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 1,
+    unit_name: 'MAP-REDUCE, HIVE and PIG',
+    question_text: 'What is Pig Latin?',
+    key_answer: 'A scripting language used in Apache Pig for data analysis.'
+  },
+  {
+    id: 'xds601-u4-c-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-4',
+    course_outcome_id: 'co-xds601-4',
+    k_level_id: 'e3333333-3333-3333-3333-333333333333',
+    question_type_id: 'd3333333-3333-3333-3333-333333333333',
+    marks_id: 'e0000015-0000-0000-0000-000000000015',
+    mark_value: 15,
+    section_type: 'SECTION_C',
+    q_no: 1,
+    unit_name: 'MAP-REDUCE, HIVE and PIG',
+    question_text: 'Discuss the architecture and workflow of Hive.',
+    evaluation_scheme: `K2 (40% = 6 Marks)
+Concept of Apache Hive:
+• Data warehouse framework on Hadoop
+• SQL-like query interface
+K3 (40% = 6 Marks)
+Hive architecture components:
+• Hive client
+• Driver
+• Compiler
+• Metastore
+• Execution engine
+K3 (20% = 3 Marks)
+Workflow from query submission to execution`
+  },
+
+  // UNIT 5: BIG DATA ANALYSIS TECHNIQUES - Section A, B, C
+  {
+    id: 'xds601-u5-a-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-5',
+    course_outcome_id: 'co-xds601-5',
+    k_level_id: 'e2222222-2222-2222-2222-222222222222',
+    question_type_id: 'd1111111-1111-1111-1111-111111111111',
+    marks_id: 'e0000001-0000-0000-0000-000000000001',
+    mark_value: 1,
+    section_type: 'SECTION_A',
+    q_no: 1,
+    unit_name: 'BIG DATA ANALYSIS TECHNIQUES',
+    question_text: 'Clustering is a type of ______ learning technique.',
+    key_answer: '(b)',
+    options: [
+      { option_letter: 'a', option_text: 'Supervised', is_correct: false },
+      { option_letter: 'b', option_text: 'Unsupervised', is_correct: true },
+      { option_letter: 'c', option_text: 'Reinforcement', is_correct: false },
+      { option_letter: 'd', option_text: 'Semi-supervised', is_correct: false }
+    ]
+  },
+  {
+    id: 'xds601-u5-b-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-5',
+    course_outcome_id: 'co-xds601-5',
+    k_level_id: 'e3333333-3333-3333-3333-333333333333',
+    question_type_id: 'd2222222-2222-2222-2222-222222222222',
+    marks_id: 'e0000002-0000-0000-0000-000000000002',
+    mark_value: 2,
+    section_type: 'SECTION_B',
+    q_no: 1,
+    unit_name: 'BIG DATA ANALYSIS TECHNIQUES',
+    question_text: 'Differentiate clustering and classification.',
+    key_answer: 'Clustering groups similar data without labels; classification assigns data to predefined categories.'
+  },
+  {
+    id: 'xds601-u5-c-01',
+    department_id: '55555555-5555-5555-5555-555555555555',
+    course_id: 'c-xds601',
+    module_id: 'mod-xds601-5',
+    course_outcome_id: 'co-xds601-5',
+    k_level_id: 'e4444444-4444-4444-4444-444444444444',
+    question_type_id: 'd3333333-3333-3333-3333-333333333333',
+    marks_id: 'e0000015-0000-0000-0000-000000000015',
+    mark_value: 15,
+    section_type: 'SECTION_C',
+    q_no: 1,
+    unit_name: 'BIG DATA ANALYSIS TECHNIQUES',
+    question_text: 'Discuss how Hadoop distributed frameworks support large-scale data processing and storage.',
+    evaluation_scheme: `K2 (40% = 6 Marks)
+Concept of distributed frameworks:
+• Distributed storage and parallel processing
+K4 (40% = 6 Marks)
+Key mechanisms:
+• Data partitioning
+• Parallel computation
+• Fault tolerance
+K4 (20% = 3 Marks)
+Benefits in large-scale Big Data applications`
   }
 ];
 

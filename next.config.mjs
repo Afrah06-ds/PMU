@@ -8,7 +8,7 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
   experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
+    serverComponentsExternalPackages: ['@supabase/supabase-js', '@supabase/ssr', 'pdfjs-dist'],
   },
   webpack: (config) => {
     config.resolve.alias = {

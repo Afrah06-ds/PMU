@@ -23,10 +23,42 @@ import {
 } from '@/lib/mock-data';
 
 const DEPTS_CACHE_KEY = 'pmu_depts_cache';
+const COURSES_CACHE_KEY = 'pmu_courses_cache';
+const MODULES_CACHE_KEY = 'pmu_modules_cache';
+const COS_CACHE_KEY = 'pmu_cos_cache';
+const KLEVELS_CACHE_KEY = 'pmu_klevels_cache';
+const TYPES_CACHE_KEY = 'pmu_types_cache';
+const MARKS_CACHE_KEY = 'pmu_marks_cache';
 
 export class MasterDataService {
+  private static memoryStore: Record<string, any[]> = {};
+
+  private static getLocal<T>(key: string): T[] {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(key);
+        if (cached) return JSON.parse(cached);
+      } catch (e) {
+        console.warn(`Failed to parse cache for ${key}:`, e);
+      }
+    }
+    return (this.memoryStore[key] as T[]) || [];
+  }
+
+  private static saveLocal<T>(key: string, items: T[]): void {
+    this.memoryStore[key] = items;
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(key, JSON.stringify(items));
+      } catch (e) {
+        console.warn(`Failed to set cache for ${key}:`, e);
+      }
+    }
+  }
+
   // DEPARTMENTS
   static async getDepartments(): Promise<Department[]> {
+    let dbDepts: Department[] = [];
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -35,24 +67,23 @@ export class MasterDataService {
         .order('code', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(DEPTS_CACHE_KEY, JSON.stringify(data));
-        }
-        return data as Department[];
+        dbDepts = data as Department[];
       }
     } catch (e) {
-      console.warn('Supabase fetch error, using local fallback:', e);
+      console.warn('Supabase depts fetch error, using local fallback:', e);
     }
 
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(DEPTS_CACHE_KEY);
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch {}
-      }
+    const localDepts = this.getLocal<Department>(DEPTS_CACHE_KEY);
+    const map = new Map<string, Department>();
+    INITIAL_DEPARTMENTS.forEach(d => map.set(d.id, d));
+    dbDepts.forEach(d => map.set(d.id, d));
+    localDepts.forEach(d => map.set(d.id, d));
+
+    const result = Array.from(map.values()).sort((a, b) => a.code.localeCompare(b.code));
+    if (result.length > 0 && typeof window !== 'undefined') {
+      this.saveLocal(DEPTS_CACHE_KEY, result);
     }
-    return INITIAL_DEPARTMENTS;
+    return result;
   }
 
   static async saveDepartment(dept: Partial<Department>): Promise<Department> {
@@ -70,9 +101,7 @@ export class MasterDataService {
         .select()
         .single();
 
-      if (error) {
-        console.error('Save department error:', error);
-      } else if (data) {
+      if (!error && data) {
         payload.id = data.id;
         payload.code = data.code;
         payload.name = data.name;
@@ -81,18 +110,16 @@ export class MasterDataService {
       console.error('Save department exception:', e);
     }
 
-    if (typeof window !== 'undefined') {
-      const current = await this.getDepartments();
-      const index = current.findIndex(d => d.id === payload.id);
-      let updated: Department[];
-      if (index >= 0) {
-        updated = [...current];
-        updated[index] = payload as Department;
-      } else {
-        updated = [...current, payload as Department];
-      }
-      localStorage.setItem(DEPTS_CACHE_KEY, JSON.stringify(updated));
+    const current = await this.getDepartments();
+    const index = current.findIndex(d => d.id === payload.id);
+    let updated: Department[];
+    if (index >= 0) {
+      updated = [...current];
+      updated[index] = payload as Department;
+    } else {
+      updated = [...current, payload as Department];
     }
+    this.saveLocal(DEPTS_CACHE_KEY, updated);
 
     return payload as Department;
   }
@@ -106,11 +133,9 @@ export class MasterDataService {
       console.error('Delete department exception:', e);
     }
 
-    if (typeof window !== 'undefined') {
-      const current = await this.getDepartments();
-      const updated = current.filter(d => d.id !== id);
-      localStorage.setItem(DEPTS_CACHE_KEY, JSON.stringify(updated));
-    }
+    const current = await this.getDepartments();
+    const updated = current.filter(d => d.id !== id);
+    this.saveLocal(DEPTS_CACHE_KEY, updated);
   }
 
   // FACULTY PROFILES
@@ -174,6 +199,7 @@ export class MasterDataService {
 
   // COURSES
   static async getCourses(departmentId?: string): Promise<Course[]> {
+    let dbCourses: Course[] = [];
     try {
       const supabase = createClient();
       let query = supabase
@@ -186,19 +212,24 @@ export class MasterDataService {
       }
 
       const { data, error } = await query;
-      if (error) {
-        console.error('Supabase courses fetch error:', error);
-      } else if (data) {
-        return data as Course[];
+      if (!error && data && data.length > 0) {
+        dbCourses = data as Course[];
       }
     } catch (e) {
       console.warn('Supabase courses fetch exception:', e);
     }
 
+    const localCourses = this.getLocal<Course>(COURSES_CACHE_KEY);
+    const map = new Map<string, Course>();
+    INITIAL_COURSES.forEach(c => map.set(c.id, c));
+    dbCourses.forEach(c => map.set(c.id, c));
+    localCourses.forEach(c => map.set(c.id, c));
+
+    let allCourses = Array.from(map.values());
     if (departmentId) {
-      return INITIAL_COURSES.filter(c => c.department_id === departmentId);
+      allCourses = allCourses.filter(c => c.department_id === departmentId);
     }
-    return INITIAL_COURSES;
+    return allCourses.sort((a, b) => a.code.localeCompare(b.code));
   }
 
   static async saveCourse(course: Partial<Course>): Promise<Course> {
@@ -219,11 +250,27 @@ export class MasterDataService {
         .select('*, department:departments(*)')
         .single();
 
-      if (error) console.error('Save course error:', error);
-      else if (data) return data as Course;
+      if (!error && data) {
+        const full = data as Course;
+        const current = this.getLocal<Course>(COURSES_CACHE_KEY);
+        const map = new Map<string, Course>();
+        INITIAL_COURSES.forEach(c => map.set(c.id, c));
+        current.forEach(c => map.set(c.id, c));
+        map.set(full.id, full);
+        this.saveLocal(COURSES_CACHE_KEY, Array.from(map.values()));
+        return full;
+      }
     } catch (e) {
       console.error('Save course exception:', e);
     }
+
+    const current = this.getLocal<Course>(COURSES_CACHE_KEY);
+    const map = new Map<string, Course>();
+    INITIAL_COURSES.forEach(c => map.set(c.id, c));
+    current.forEach(c => map.set(c.id, c));
+    map.set(payload.id, payload as Course);
+    this.saveLocal(COURSES_CACHE_KEY, Array.from(map.values()));
+
     return payload as Course;
   }
 
@@ -235,10 +282,15 @@ export class MasterDataService {
     } catch (e) {
       console.error('Delete course exception:', e);
     }
+
+    const current = this.getLocal<Course>(COURSES_CACHE_KEY);
+    const updated = current.filter(c => c.id !== id);
+    this.saveLocal(COURSES_CACHE_KEY, updated);
   }
 
   // MODULES
   static async getModules(courseId?: string): Promise<Module[]> {
+    let dbModules: Module[] = [];
     try {
       const supabase = createClient();
       let query = supabase
@@ -251,19 +303,24 @@ export class MasterDataService {
       }
 
       const { data, error } = await query;
-      if (error) {
-        console.error('Supabase modules fetch error:', error);
-      } else if (data) {
-        return data as Module[];
+      if (!error && data && data.length > 0) {
+        dbModules = data as Module[];
       }
     } catch (e) {
       console.warn('Supabase modules fetch exception:', e);
     }
 
+    const localModules = this.getLocal<Module>(MODULES_CACHE_KEY);
+    const map = new Map<string, Module>();
+    INITIAL_MODULES.forEach(m => map.set(m.id, m));
+    dbModules.forEach(m => map.set(m.id, m));
+    localModules.forEach(m => map.set(m.id, m));
+
+    let allModules = Array.from(map.values());
     if (courseId) {
-      return INITIAL_MODULES.filter(m => m.course_id === courseId);
+      allModules = allModules.filter(m => m.course_id === courseId);
     }
-    return INITIAL_MODULES;
+    return allModules.sort((a, b) => a.module_number - b.module_number);
   }
 
   static async saveModule(mod: Partial<Module>): Promise<Module> {
@@ -283,11 +340,27 @@ export class MasterDataService {
         .select()
         .single();
 
-      if (error) console.error('Save module error:', error);
-      else if (data) return data as Module;
+      if (!error && data) {
+        const full = data as Module;
+        const current = this.getLocal<Module>(MODULES_CACHE_KEY);
+        const map = new Map<string, Module>();
+        INITIAL_MODULES.forEach(m => map.set(m.id, m));
+        current.forEach(m => map.set(m.id, m));
+        map.set(full.id, full);
+        this.saveLocal(MODULES_CACHE_KEY, Array.from(map.values()));
+        return full;
+      }
     } catch (e) {
       console.error('Save module exception:', e);
     }
+
+    const current = this.getLocal<Module>(MODULES_CACHE_KEY);
+    const map = new Map<string, Module>();
+    INITIAL_MODULES.forEach(m => map.set(m.id, m));
+    current.forEach(m => map.set(m.id, m));
+    map.set(payload.id, payload as Module);
+    this.saveLocal(MODULES_CACHE_KEY, Array.from(map.values()));
+
     return payload as Module;
   }
 
@@ -299,10 +372,15 @@ export class MasterDataService {
     } catch (e) {
       console.error('Delete module exception:', e);
     }
+
+    const current = this.getLocal<Module>(MODULES_CACHE_KEY);
+    const updated = current.filter(m => m.id !== id);
+    this.saveLocal(MODULES_CACHE_KEY, updated);
   }
 
   // COURSE OUTCOMES (CO)
   static async getCourseOutcomes(courseId?: string): Promise<CourseOutcome[]> {
+    let dbCos: CourseOutcome[] = [];
     try {
       const supabase = createClient();
       let query = supabase
@@ -315,29 +393,47 @@ export class MasterDataService {
       }
 
       const { data, error } = await query;
-      if (error) {
-        console.error('Supabase CO fetch error:', error);
-      } else if (data) {
-        return data as CourseOutcome[];
+      if (!error && data && data.length > 0) {
+        dbCos = data as CourseOutcome[];
       }
     } catch (e) {
       console.warn('Supabase CO fetch exception:', e);
     }
 
+    const localCos = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
+    const map = new Map<string, CourseOutcome>();
+    INITIAL_COS.forEach(c => map.set(c.id, c));
+    dbCos.forEach(c => map.set(c.id, c));
+    localCos.forEach(c => map.set(c.id, c));
+
+    let allCos = Array.from(map.values());
     if (courseId) {
-      return INITIAL_COS.filter(c => c.course_id === courseId);
+      allCos = allCos.filter(c => c.course_id === courseId);
     }
-    return INITIAL_COS;
+    return allCos.sort((a, b) => a.code.localeCompare(b.code));
   }
 
   static async saveCourseOutcome(co: Partial<CourseOutcome>): Promise<CourseOutcome> {
     const supabase = createClient();
-    const payload = {
-      id: co.id || crypto.randomUUID(),
-      course_id: co.course_id || INITIAL_COURSES[0].id,
+    const id = co.id || crypto.randomUUID();
+    const courseId = co.course_id || INITIAL_COURSES[0].id;
+    const code = co.code || `CO${co.co_number || 1}`;
+    const description = co.description || 'Course outcome description';
+
+    const dbPayload = {
+      id,
+      course_id: courseId,
+      code,
+      description
+    };
+
+    const fullCO: CourseOutcome = {
+      ...co,
+      id,
+      course_id: courseId,
+      code,
+      description,
       co_number: co.co_number || 1,
-      code: co.code || `CO${co.co_number || 1}`,
-      description: co.description || 'Course outcome description',
       k_level_code: co.k_level_code || 'K1',
       k_level_id: co.k_level_id
     };
@@ -345,16 +441,32 @@ export class MasterDataService {
     try {
       const { data, error } = await supabase
         .from('course_outcomes')
-        .upsert(payload)
+        .upsert(dbPayload)
         .select()
         .single();
 
-      if (error) console.error('Save CO error:', error);
-      else if (data) return data as CourseOutcome;
+      if (!error && data) {
+        const merged = { ...fullCO, ...data };
+        const current = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
+        const map = new Map<string, CourseOutcome>();
+        INITIAL_COS.forEach(c => map.set(c.id, c));
+        current.forEach(c => map.set(c.id, c));
+        map.set(merged.id, merged);
+        this.saveLocal(COS_CACHE_KEY, Array.from(map.values()));
+        return merged;
+      }
     } catch (e) {
       console.error('Save CO exception:', e);
     }
-    return payload as CourseOutcome;
+
+    const current = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
+    const map = new Map<string, CourseOutcome>();
+    INITIAL_COS.forEach(c => map.set(c.id, c));
+    current.forEach(c => map.set(c.id, c));
+    map.set(id, fullCO);
+    this.saveLocal(COS_CACHE_KEY, Array.from(map.values()));
+
+    return fullCO;
   }
 
   static async deleteCourseOutcome(id: string): Promise<void> {
@@ -365,6 +477,10 @@ export class MasterDataService {
     } catch (e) {
       console.error('Delete CO exception:', e);
     }
+
+    const current = this.getLocal<CourseOutcome>(COS_CACHE_KEY);
+    const updated = current.filter(c => c.id !== id);
+    this.saveLocal(COS_CACHE_KEY, updated);
   }
 
   // K-LEVELS

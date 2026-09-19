@@ -51,6 +51,9 @@ export function QuestionForm({
   const [marksId, setMarksId] = useState('');
   const [markValue, setMarkValue] = useState<number>(1);
   const [questionText, setQuestionText] = useState('');
+  const [sectionType, setSectionType] = useState<'SECTION_A' | 'SECTION_B' | 'SECTION_C'>('SECTION_A');
+  const [keyAnswer, setKeyAnswer] = useState('');
+  const [evaluationScheme, setEvaluationScheme] = useState('');
 
   // MCQ Options
   const [options, setOptions] = useState<QuestionOption[]>([
@@ -98,6 +101,20 @@ export function QuestionForm({
           setMarksId(existing.marks_id);
           setMarkValue(existing.mark_value);
           setQuestionText(existing.question_text);
+          if (existing.key_answer) setKeyAnswer(existing.key_answer);
+          if (existing.evaluation_scheme) setEvaluationScheme(existing.evaluation_scheme);
+          if (existing.section_type) {
+            const sec = existing.section_type.replace('SECTION_', '');
+            setSectionType(`SECTION_${sec}` as any);
+          } else {
+            if (existing.mark_value === 1 || (existing.options && existing.options.length > 0)) {
+              setSectionType('SECTION_A');
+            } else if (existing.mark_value === 2) {
+              setSectionType('SECTION_B');
+            } else {
+              setSectionType('SECTION_C');
+            }
+          }
           if (existing.options && existing.options.length > 0) {
             setOptions(existing.options);
           }
@@ -159,18 +176,46 @@ export function QuestionForm({
       if (m.mark_value === 1) {
         const mcqType = types.find(t => t.code === 'MCQ');
         if (mcqType) setTypeId(mcqType.id);
+        setSectionType('SECTION_A');
       } else if (m.mark_value === 2) {
         const shortType = types.find(t => t.code === 'SHORT');
         if (shortType) setTypeId(shortType.id);
+        setSectionType('SECTION_B');
       } else {
         const longType = types.find(t => t.code === 'LONG');
         if (longType) setTypeId(longType.id);
+        setSectionType('SECTION_C');
       }
     }
   };
 
+  const handleSectionChange = (sec: 'SECTION_A' | 'SECTION_B' | 'SECTION_C') => {
+    setSectionType(sec);
+    if (sec === 'SECTION_A') {
+      setMarkValue(1);
+      const m1 = marksList.find(m => m.mark_value === 1);
+      if (m1) setMarksId(m1.id);
+      const mcqType = types.find(t => t.code === 'MCQ');
+      if (mcqType) setTypeId(mcqType.id);
+    } else if (sec === 'SECTION_B') {
+      setMarkValue(2);
+      const m2 = marksList.find(m => m.mark_value === 2);
+      if (m2) setMarksId(m2.id);
+      const shortType = types.find(t => t.code === 'SHORT');
+      if (shortType) setTypeId(shortType.id);
+    } else {
+      if (markValue < 5) {
+        setMarkValue(15);
+        const m15 = marksList.find(m => m.mark_value === 15) || marksList[marksList.length - 1];
+        if (m15) setMarksId(m15.id);
+      }
+      const longType = types.find(t => t.code === 'LONG');
+      if (longType) setTypeId(longType.id);
+    }
+  };
+
   const selectedType = types.find(t => t.id === typeId);
-  const isMCQ = selectedType?.code === 'MCQ' || markValue === 1;
+  const isMCQ = sectionType === 'SECTION_A' || selectedType?.code === 'MCQ' || markValue === 1;
 
   const handleOptionChange = (idx: number, text: string) => {
     const next = [...options];
@@ -184,22 +229,52 @@ export function QuestionForm({
       is_correct: i === idx
     }));
     setOptions(next);
+    setKeyAnswer(`(${next[idx].option_letter})`);
+  };
+
+  const handleInsertRubricTemplate = () => {
+    const template = `K2 (40% = 6 Marks)
+Concept and Fundamentals:
+• Definition and basic principles
+• Theoretical framework
+K4 (40% = 6 Marks)
+Architecture and Mechanisms:
+• Core components and internal structure
+• Processing flow and algorithms
+K4 (20% = 3 Marks)
+Applications and Evaluation:
+• Real-world implementation and use cases`;
+    setEvaluationScheme(template);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setFormError('');
+
+    if (!moduleId || !coId || !klevelId) {
+      const missing: string[] = [];
+      if (!moduleId) missing.push('Module');
+      if (!coId) missing.push('Course Outcome (CO)');
+      if (!klevelId) missing.push("Bloom's K-Level");
+      setFormError(`Need a proper alignment or else the question paper will not generate properly. Please assign: ${missing.join(', ')}.`);
+      setSaving(false);
+      return;
+    }
 
     if (isMCQ) {
       const hasEmpty = options.some(o => !o.option_text.trim());
       if (hasEmpty) {
-        setFormError('Please fill out text for all four MCQ options before saving.');
+        setFormError('Need a proper alignment or else the question paper will not generate properly. Please fill out text for all four MCQ options.');
         setSaving(false);
         return;
       }
     }
 
     try {
+      const correctOpt = options.find(o => o.is_correct);
+      const finalKeyAnswer = isMCQ ? (correctOpt ? `(${correctOpt.option_letter})` : keyAnswer) : keyAnswer;
+
       await QuestionService.saveQuestion({
         id: editId,
         department_id: departmentId,
@@ -211,6 +286,9 @@ export function QuestionForm({
         marks_id: marksId,
         mark_value: markValue,
         question_text: questionText,
+        section_type: sectionType,
+        key_answer: finalKeyAnswer,
+        evaluation_scheme: evaluationScheme,
         options: isMCQ ? options : []
       });
 
@@ -274,6 +352,67 @@ export function QuestionForm({
           </Button>
         </div>
       </div>
+
+      {/* Question Bank Section Mode Selector */}
+      <Card className="p-4 bg-slate-50 border-indigo-100 space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Question Bank Section Format
+          </label>
+          <span className="text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+            PMIST QMS Structure
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => handleSectionChange('SECTION_A')}
+            className={`p-3 rounded-xl border text-left transition-all ${
+              sectionType === 'SECTION_A'
+                ? 'bg-white border-brand-500 shadow-sm ring-2 ring-brand-500/20'
+                : 'bg-white/60 border-slate-200 hover:bg-white text-slate-600'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-slate-900">Section A</span>
+              <Badge variant="primary" className="text-[10px]">1 Mark</Badge>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">Objective Type (MCQ with Options & Key)</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSectionChange('SECTION_B')}
+            className={`p-3 rounded-xl border text-left transition-all ${
+              sectionType === 'SECTION_B'
+                ? 'bg-white border-brand-500 shadow-sm ring-2 ring-brand-500/20'
+                : 'bg-white/60 border-slate-200 hover:bg-white text-slate-600'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-slate-900">Section B</span>
+              <Badge variant="info" className="text-[10px]">2 Marks</Badge>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">Short Answers with Key Answer</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSectionChange('SECTION_C')}
+            className={`p-3 rounded-xl border text-left transition-all ${
+              sectionType === 'SECTION_C'
+                ? 'bg-white border-brand-500 shadow-sm ring-2 ring-brand-500/20'
+                : 'bg-white/60 border-slate-200 hover:bg-white text-slate-600'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-slate-900">Section C</span>
+              <Badge variant="warning" className="text-[10px]">5 - 15 Marks</Badge>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">Descriptive with Evaluation Scheme</p>
+          </button>
+        </div>
+      </Card>
 
       {/* Metadata Configuration Card */}
       <Card className="p-6 space-y-4">
@@ -437,6 +576,63 @@ export function QuestionForm({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Section B: Short Answer Key Answer */}
+        {sectionType === 'SECTION_B' && (
+          <div className="mt-6 pt-4 border-t border-slate-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Section B: Key Answer / Model Definition *
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  Standard expected definition or model solution for this 2-mark question.
+                </p>
+              </div>
+              <Badge variant="info" className="text-xs">Short Answer Key</Badge>
+            </div>
+            <textarea
+              rows={3}
+              required
+              placeholder="e.g. Very large and complex data sets that require advanced tools for storage and processing."
+              value={keyAnswer}
+              onChange={e => setKeyAnswer(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none leading-relaxed"
+            />
+          </div>
+        )}
+
+        {/* Section C: Descriptive Evaluation Scheme */}
+        {sectionType === 'SECTION_C' && (
+          <div className="mt-6 pt-4 border-t border-slate-100 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Section C: Evaluation Scheme & Rubrics
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  Specify Bloom&apos;s level breakdown, percentages, marks, and grading rubrics.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleInsertRubricTemplate}
+                className="text-xs shrink-0"
+              >
+                Insert PMIST Rubric Template
+              </Button>
+            </div>
+            <textarea
+              rows={6}
+              placeholder={`K2 (60% = 5 Marks)\nConcept of 3Vs of Big Data:\n• Volume – large amount of data generated\n• Velocity – speed at which data is generated and processed\n• Variety – different forms of data (text, images, videos)\nK2 (40% = 2 Marks)\nExamples illustrating the 3Vs:\n• Social media data\n• Online transactions`}
+              value={evaluationScheme}
+              onChange={e => setEvaluationScheme(e.target.value)}
+              className="w-full px-3 py-2 font-mono text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none leading-relaxed"
+            />
           </div>
         )}
       </Card>
