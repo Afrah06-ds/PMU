@@ -6,6 +6,7 @@ import { Course, Department, Module, CourseOutcome, KLevel, QuestionType, Questi
 import { QuestionService } from '@/services/question.service';
 import { MasterDataService } from '@/services/master-data.service';
 import { QuestionBankParser, ParsedQuestionBankRow, ParsedCourseMetadata } from '@/lib/question-bank-parser';
+import { extractPdfInBrowser } from '@/lib/client-pdf-extractor';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -119,20 +120,31 @@ export default function PDFImportQuestionsPage() {
     setSuccessCount(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', uploadedFile);
+      let data: any;
 
-      const res = await fetch('/api/extract-pdf', {
-        method: 'POST',
-        body: formData
-      });
+      // 1. Primary: Fast, in-browser PDF extraction (zero Vercel serverless dependency)
+      try {
+        data = await extractPdfInBrowser(uploadedFile);
+      } catch (browserErr) {
+        console.warn('In-browser extraction fallback to server API:', browserErr);
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to extract text from PDF file');
+        // 2. Secondary fallback: Server-side API route
+        const formData = new FormData();
+        formData.append('file', uploadedFile);
+
+        const res = await fetch('/api/extract-pdf', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to extract text from PDF file');
+        }
+
+        data = await res.json();
       }
 
-      const data = await res.json();
       setPdfPageCount(data.numPages || 1);
 
       let extractedQuestions: ParsedQuestionBankRow[] = data.questions || [];
