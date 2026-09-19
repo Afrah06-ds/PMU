@@ -145,9 +145,14 @@ export default function CoursesPage() {
 
   const handleDeleteCourse = async (id: string) => {
     if (!confirm('Are you sure you want to delete this course and all its nested modules/COs?')) return;
-    await MasterDataService.deleteCourse(id);
+    setCourses(prev => prev.filter(c => c.id !== id));
     if (activeCourse?.id === id) setActiveCourse(null);
-    loadInitialData();
+    try {
+      await MasterDataService.deleteCourse(id);
+    } catch (err) {
+      console.error('Failed to delete course:', err);
+    }
+    await loadInitialData();
   };
 
   // Module CRUD Handlers
@@ -187,8 +192,13 @@ export default function CoursesPage() {
 
   const handleDeleteModule = async (id: string) => {
     if (!confirm('Delete this module?')) return;
-    await MasterDataService.deleteModule(id);
-    if (activeCourse) loadCourseSubDetails(activeCourse);
+    setCourseModules(prev => prev.filter(m => m.id !== id));
+    try {
+      await MasterDataService.deleteModule(id);
+    } catch (err) {
+      console.error('Failed to delete module:', err);
+    }
+    if (activeCourse) await loadCourseSubDetails(activeCourse);
   };
 
   // CO CRUD Handlers
@@ -229,8 +239,13 @@ export default function CoursesPage() {
 
   const handleDeleteCO = async (id: string) => {
     if (!confirm('Delete this Course Outcome?')) return;
-    await MasterDataService.deleteCourseOutcome(id);
-    if (activeCourse) loadCourseSubDetails(activeCourse);
+    setCourseCOs(prev => prev.filter(c => c.id !== id));
+    try {
+      await MasterDataService.deleteCourseOutcome(id);
+    } catch (err) {
+      console.error('Failed to delete CO:', err);
+    }
+    if (activeCourse) await loadCourseSubDetails(activeCourse);
   };
 
   const filteredCourses = courses.filter(c => {
